@@ -54,23 +54,32 @@ fun LoginScreen(navController: NavController) {
                 auth.signInWithEmailAndPassword(email.trim(), password.trim())
                     .addOnSuccessListener { result ->
                         val uid = result.user?.uid ?: return@addOnSuccessListener
+
                         db.collection("users").document(uid).get()
                             .addOnSuccessListener { document ->
                                 if (document.exists()) {
+                                    // Usuario ya tiene perfil → ir a gimnasios
                                     navController.navigate(Screen.Gym.route)
                                 } else {
+                                    // Usuario existe en Auth pero no tiene datos → ir a completar perfil
                                     navController.navigate(Screen.User.route)
                                 }
                             }
+                            .addOnFailureListener {
+                                // Fallo en Firestore
+                                errorMessage = "Error al acceder a los datos del usuario."
+                            }
                     }
                     .addOnFailureListener {
-                        errorMessage = "Error al iniciar sesión: ${it.message}"
+                        // Fallo de login (mal email o contraseña)
+                        errorMessage = "Usuario o contraseña incorrectos. ¿Tienes cuenta creada?"
                     }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Iniciar sesión") //  Contenido del botón
+            Text("Iniciar sesión")
         }
+
 
 
         Spacer(modifier = Modifier.height(8.dp))

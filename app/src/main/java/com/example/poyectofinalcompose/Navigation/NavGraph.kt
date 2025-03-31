@@ -71,7 +71,7 @@ fun NavGraph(navController: NavHostController, isDarkTheme: Boolean, onThemeChan
                 genero = "Masculino"
             }
 
-            PruebasScreen(navController, edad, genero)
+
         }
 
         // Pantalla de detalle de la prueba (usando operador Elvis para un código más limpio)
