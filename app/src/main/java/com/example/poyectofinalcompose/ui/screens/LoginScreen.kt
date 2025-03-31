@@ -58,10 +58,10 @@ fun LoginScreen(navController: NavController) {
                         db.collection("users").document(uid).get()
                             .addOnSuccessListener { document ->
                                 if (document.exists()) {
-                                    // Usuario ya tiene perfil → ir a gimnasios
+                                    // Usuario ya tiene perfil ir a gimnasios
                                     navController.navigate(Screen.Gym.route)
                                 } else {
-                                    // Usuario existe en Auth pero no tiene datos → ir a completar perfil
+                                    // Usuario existe en Auth pero no tiene datos ir a completar perfil
                                     navController.navigate(Screen.User.route)
                                 }
                             }

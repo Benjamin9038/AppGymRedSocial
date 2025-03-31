@@ -93,6 +93,7 @@ fun UserScreen(navController: NavController) {
             value = edad,
             onValueChange = { edad = it },
             label = { Text("Edad") },
+            //Solo numeros en el teclado
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
@@ -145,6 +146,7 @@ fun UserScreen(navController: NavController) {
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Gimnasio") },
+                //Bordes no tan cuadrados
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.menuAnchor().fillMaxWidth()
             )
@@ -210,7 +212,7 @@ fun UserScreen(navController: NavController) {
                 readOnly = true,
                 label = { Text("Tiempo entrenando") },
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier.menuAnchor().fillMaxWidth() //Para que el menu se posicione bien
             )
             DropdownMenu(
                 expanded = tiempoExpanded,
@@ -233,10 +235,13 @@ fun UserScreen(navController: NavController) {
         Button(
             onClick = {
                 if (email.isNotBlank() && password.length >= 6) {
+                    //Crea usuario y contraseñaa en firebase auth
                     auth.createUserWithEmailAndPassword(email.trim(), password.trim())
+                        //Obtiene uuid unico del usuario
                         .addOnSuccessListener { result ->
                             val uid = result.user?.uid ?: return@addOnSuccessListener
 
+                            //Guarda estos datos en firestore
                             val userMap = hashMapOf(
                                 "uid" to uid,
                                 "email" to email,
@@ -249,11 +254,12 @@ fun UserScreen(navController: NavController) {
                                 "grupoMuscularFavorito" to grupoMuscular,
                                 "tiempoEntrenando" to tiempoEntrenando
                             )
-
+                            //Lo gauarda en firestore
                             db.collection("users").document(uid).set(userMap)
                                 .addOnSuccessListener {
                                     auth.signInWithEmailAndPassword(email.trim(), password.trim())
                                         .addOnSuccessListener {
+                                            //si inicia sesios bien y va a gimnasios
                                             navController.navigate(Screen.Gym.route)
                                         }
                                         .addOnFailureListener {

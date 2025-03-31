@@ -13,6 +13,7 @@ import com.example.poyectofinalcompose.ui.screens.PantallaGimnasios
 open class Screen(val route: String) {
     object Login : Screen("login")
     object User : Screen("user")
+     //Para crear una ruta paracambiarlo por valores reales
      object Pruebas : Screen("pruebas/{edad}/{genero}") {
         fun createRoute(edad: Int, genero: String) = "pruebas/$edad/$genero"
     }
@@ -72,14 +73,6 @@ fun NavGraph(navController: NavHostController, isDarkTheme: Boolean, onThemeChan
             }
 
 
-        }
-
-        // Pantalla de detalle de la prueba (usando operador Elvis para un código más limpio)
-        composable(Screen.Detalle.route) { backStackEntry ->
-            val pruebaId = backStackEntry.arguments?.getString("pruebaId") ?: ""
-            val edad = backStackEntry.arguments?.getString("edad")?.toIntOrNull() ?: 0
-            val genero = backStackEntry.arguments?.getString("genero") ?: "Masculino"
-            DetalleScreen(pruebaId, navController, edad, genero)
         }
 
         composable(Screen.Gym.route) {
