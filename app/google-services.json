@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "141707618943",
+    "project_id": "tfgsocialgym",
+    "storage_bucket": "tfgsocialgym.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:141707618943:android:88ae0787b67de52b2c2d4a",
+        "android_client_info": {
+          "package_name": "com.example.poyectofinalcompose"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6Q03xpjCSxXdo_apo4bpZeJ68AEf8Tl0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
