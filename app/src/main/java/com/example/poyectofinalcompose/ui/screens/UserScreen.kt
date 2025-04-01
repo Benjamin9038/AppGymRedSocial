@@ -15,15 +15,17 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.poyectofinalcompose.Data.Model.Usuario
+import com.example.poyectofinalcompose.Data.Repository.UserRepository
 import com.example.poyectofinalcompose.Navigation.Screen
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(navController: NavController) {
+    //Variables de Firebase Auth y el repositorio para guardar usuario
     val auth = FirebaseAuth.getInstance()
-    val db = FirebaseFirestore.getInstance()
+    val userRepository = remember { UserRepository() }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -36,6 +38,7 @@ fun UserScreen(navController: NavController) {
     var masculino by remember { mutableStateOf(true) }
     var femenino by remember { mutableStateOf(false) }
 
+    // Listado y selección de gimnasio
     val listaGimnasios = listOf(
         "Basic Fit Albacete", "McFit Albacete", "Fitness Villarrobledo",
         "Tiger Villarrobledo", "FraileGym Villarrobledo", "Centro Albacete", "Otro / No encuentro mi gimnasio"
@@ -53,6 +56,7 @@ fun UserScreen(navController: NavController) {
 
     var errorMessage by remember { mutableStateOf("") }
 
+    // Contenedor principal con scroll vertical
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,9 +65,9 @@ fun UserScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Crear Cuenta", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Campos del formulario
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -76,6 +80,7 @@ fun UserScreen(navController: NavController) {
             value = password,
             onValueChange = { password = it },
             label = { Text("Contraseña") },
+            //para que no salgan los caracteres de la contraseña
             visualTransformation = PasswordVisualTransformation(),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
@@ -93,7 +98,7 @@ fun UserScreen(navController: NavController) {
             value = edad,
             onValueChange = { edad = it },
             label = { Text("Edad") },
-            //Solo numeros en el teclado
+            //para que en el teclado solo salgan numeros
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
@@ -118,42 +123,37 @@ fun UserScreen(navController: NavController) {
         )
 
         Spacer(modifier = Modifier.height(12.dp))
-
         Text("Género", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = masculino, onCheckedChange = {
-                masculino = it; femenino = !it; genero = "Masculino"
+            Checkbox(checked = masculino, onCheckedChange = { isChecked ->
+                masculino = isChecked
+                femenino = !isChecked
+                genero = "Masculino"
             })
             Text("Masculino")
             Spacer(modifier = Modifier.width(16.dp))
-            Checkbox(checked = femenino, onCheckedChange = {
-                femenino = it; masculino = !it; genero = "Femenino"
+            Checkbox(checked = femenino, onCheckedChange = {isChecked ->
+                femenino = isChecked
+                masculino = !isChecked
+                genero = "Femenino"
             })
             Text("Femenino")
         }
 
+        // Dropdown de gimnasio
         Spacer(modifier = Modifier.height(16.dp))
-
         Text("Selecciona tu gimnasio", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
-        ExposedDropdownMenuBox(
-            expanded = gimnasioExpanded,
-            onExpandedChange = { gimnasioExpanded = !gimnasioExpanded }
-        ) {
+        ExposedDropdownMenuBox(expanded = gimnasioExpanded, onExpandedChange = { gimnasioExpanded = !gimnasioExpanded }) {
             TextField(
                 value = gimnasioSeleccionado,
                 onValueChange = {},
-                readOnly = true,
+                readOnly = true, //Para que el usuario no pueda editar nada
                 label = { Text("Gimnasio") },
-                //Bordes no tan cuadrados
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier.menuAnchor()//indica que el Dropdown se mostrará justo debajo del TextField
+                    .fillMaxWidth()
             )
-            DropdownMenu(
-                expanded = gimnasioExpanded,
-                onDismissRequest = { gimnasioExpanded = false }
-            ) {
+            DropdownMenu(expanded = gimnasioExpanded, onDismissRequest = { gimnasioExpanded = false }) {
                 listaGimnasios.forEach { gym ->
                     DropdownMenuItem(
                         text = { Text(gym) },
@@ -166,14 +166,10 @@ fun UserScreen(navController: NavController) {
             }
         }
 
+        // Dropdown de grupo muscular favorito
         Spacer(modifier = Modifier.height(16.dp))
-
         Text("Grupo muscular favorito", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
-        ExposedDropdownMenuBox(
-            expanded = grupoExpanded,
-            onExpandedChange = { grupoExpanded = !grupoExpanded }
-        ) {
+        ExposedDropdownMenuBox(expanded = grupoExpanded, onExpandedChange = { grupoExpanded = !grupoExpanded }) {
             TextField(
                 value = grupoMuscular,
                 onValueChange = {},
@@ -182,10 +178,7 @@ fun UserScreen(navController: NavController) {
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.menuAnchor().fillMaxWidth()
             )
-            DropdownMenu(
-                expanded = grupoExpanded,
-                onDismissRequest = { grupoExpanded = false }
-            ) {
+            DropdownMenu(expanded = grupoExpanded, onDismissRequest = { grupoExpanded = false }) {
                 listaGrupos.forEach { grupo ->
                     DropdownMenuItem(
                         text = { Text(grupo) },
@@ -199,25 +192,17 @@ fun UserScreen(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
         Text("Tiempo entrenando", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
-        ExposedDropdownMenuBox(
-            expanded = tiempoExpanded,
-            onExpandedChange = { tiempoExpanded = !tiempoExpanded }
-        ) {
+        ExposedDropdownMenuBox(expanded = tiempoExpanded, onExpandedChange = { tiempoExpanded = !tiempoExpanded }) {
             TextField(
                 value = tiempoEntrenando,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Tiempo entrenando") },
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.menuAnchor().fillMaxWidth() //Para que el menu se posicione bien
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
-            DropdownMenu(
-                expanded = tiempoExpanded,
-                onDismissRequest = { tiempoExpanded = false }
-            ) {
+            DropdownMenu(expanded = tiempoExpanded, onDismissRequest = { tiempoExpanded = false }) {
                 tiempos.forEach { tiempo ->
                     DropdownMenuItem(
                         text = { Text(tiempo) },
@@ -235,40 +220,41 @@ fun UserScreen(navController: NavController) {
         Button(
             onClick = {
                 if (email.isNotBlank() && password.length >= 6) {
-                    //Crea usuario y contraseñaa en firebase auth
+                    // Intentar crear cuenta en Firebase Authentication con email y contraseña
                     auth.createUserWithEmailAndPassword(email.trim(), password.trim())
-                        //Obtiene uuid unico del usuario
                         .addOnSuccessListener { result ->
+                            // Obtener el UID generado por Firebase para este nuevo usuario
                             val uid = result.user?.uid ?: return@addOnSuccessListener
 
-                            //Guarda estos datos en firestore
-                            val userMap = hashMapOf(
-                                "uid" to uid,
-                                "email" to email,
-                                "nombre" to nombre,
-                                "edad" to (edad.toLongOrNull() ?: 0L),
-                                "peso" to (peso.toDoubleOrNull() ?: 0.0),
-                                "altura" to (altura.toDoubleOrNull() ?: 0.0),
-                                "genero" to genero,
-                                "gymId" to if (gimnasioSeleccionado == "Otro / No encuentro mi gimnasio") "libre" else gimnasioSeleccionado,
-                                "grupoMuscularFavorito" to grupoMuscular,
-                                "tiempoEntrenando" to tiempoEntrenando
+                            //crea un objeto Usuario con los datos introducidos en el formulario
+                            val nuevoUsuario = Usuario(
+                                uid = uid,
+                                email = email,
+                                nombre = nombre,
+                                edad = edad.toIntOrNull() ?: 0,
+                                peso = peso.toDoubleOrNull() ?: 0.0,
+                                altura = altura.toDoubleOrNull() ?: 0.0,
+                                genero = genero,
+                                gymId = if (gimnasioSeleccionado == "Otro / No encuentro mi gimnasio") "libre" else gimnasioSeleccionado,
+                                grupoMuscularFavorito = grupoMuscular,
+                                tiempoEntrenando = tiempoEntrenando
                             )
-                            //Lo gauarda en firestore
-                            db.collection("users").document(uid).set(userMap)
-                                .addOnSuccessListener {
+
+                            //Guarda el usuario en Firestore a través del repositorio
+                            userRepository.guardarUsuario(nuevoUsuario) { success, error ->
+                                if (success) {
+                                    // si se ha guardado correctamente, inicia sesion con el nuevo usuario
                                     auth.signInWithEmailAndPassword(email.trim(), password.trim())
                                         .addOnSuccessListener {
-                                            //si inicia sesios bien y va a gimnasios
                                             navController.navigate(Screen.Gym.route)
                                         }
                                         .addOnFailureListener {
                                             errorMessage = "Cuenta creada pero fallo al iniciar sesión: ${it.message}"
                                         }
+                                } else {
+                                    errorMessage = "Error al guardar datos: $error"
                                 }
-                                .addOnFailureListener {
-                                    errorMessage = "Error al guardar datos: ${it.message}"
-                                }
+                            }
                         }
                         .addOnFailureListener {
                             errorMessage = "Error al crear cuenta: ${it.message}"

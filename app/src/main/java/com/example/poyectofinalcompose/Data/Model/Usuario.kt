@@ -1,10 +1,14 @@
 package com.example.poyectofinalcompose.Data.Model
-
+// Modelo de datos que representa un usuario registrado en la app
 data class Usuario(
-    val id: Int,
-    var nombre: String,
-    var edad: Int,
-    var peso: Float,
-    var altura: Float,
-    var genero: String
+    val uid: String = "",
+    val email: String = "",
+    val nombre: String = "",
+    val edad: Int = 0,
+    val peso: Double = 0.0,
+    val altura: Double = 0.0,
+    val genero: String = "",
+    val gymId: String = "",
+    val grupoMuscularFavorito: String = "",
+    val tiempoEntrenando: String = ""
 )

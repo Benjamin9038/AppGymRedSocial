@@ -2,15 +2,15 @@ package com.example.poyectofinalcompose.Data.Repository
 
 
 import com.example.poyectofinalcompose.Data.Model.Usuario
-
+import com.google.firebase.firestore.FirebaseFirestore
+// Repositorio encargado de gestionar los datos del usuario en Firestore
 class UserRepository {
-    private var usuario: Usuario? = null
+    private val db = FirebaseFirestore.getInstance()
 
-    fun guardarUsuario(nuevoUsuario: Usuario) {
-        usuario = nuevoUsuario
-    }
-
-    fun obtenerUsuario(): Usuario? {
-        return usuario
+    // Guarda o actualiza un usuario en la colección usuarios
+    fun guardarUsuario(usuario: Usuario, onResult: (Boolean, String?) -> Unit) {
+        db.collection("users").document(usuario.uid).set(usuario)
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message) }
     }
 }
