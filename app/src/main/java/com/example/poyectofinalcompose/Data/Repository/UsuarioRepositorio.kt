@@ -13,4 +13,18 @@ class UserRepository {
             .addOnSuccessListener { onResult(true, null) }
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
+
+    // Obtiene todos los usuarios que pertenecen a un gimnasio específico
+    fun obtenerUsuariosPorGimnasio(gymId: String, onResult: (List<Usuario>) -> Unit) {
+        db.collection("users")
+            .whereEqualTo("gymId", gymId)
+            .get()
+            .addOnSuccessListener { result ->
+                val usuarios = result.mapNotNull { it.toObject(Usuario::class.java) }
+                onResult(usuarios)
+            }
+            .addOnFailureListener {
+                onResult(emptyList()) // En caso de error, devuelve lista vacía
+            }
+    }
 }

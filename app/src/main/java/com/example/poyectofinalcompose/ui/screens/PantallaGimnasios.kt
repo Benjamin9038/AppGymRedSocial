@@ -12,7 +12,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.poyectofinalcompose.Navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,7 +23,7 @@ fun PantallaGimnasios(navController: NavController) {
         "Tiger Villarrobledo",
         "FraileGym Villarrobledo",
         "Centro Albacete",
-        "Otro / No encuentro mi gimnasio"
+        "Otro"
     )
 
     Scaffold(
@@ -54,21 +53,20 @@ fun PantallaGimnasios(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
+                        .clickable {
+                            navController.navigate("usuariosPorGimnasio/${gym}")
+                        }
                 ) {
-                    Box(
+                    Text(
+                        text = gym,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
+                            .padding(16.dp)
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = gym,
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    )
                 }
+            }
             }
         }
     }
-}
+

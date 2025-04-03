@@ -41,7 +41,7 @@ fun UserScreen(navController: NavController) {
     // Listado y selección de gimnasio
     val listaGimnasios = listOf(
         "Basic Fit Albacete", "McFit Albacete", "Fitness Villarrobledo",
-        "Tiger Villarrobledo", "FraileGym Villarrobledo", "Centro Albacete", "Otro / No encuentro mi gimnasio"
+        "Tiger Villarrobledo", "FraileGym Villarrobledo", "Centro Albacete", "Otro"
     )
     var gimnasioSeleccionado by remember { mutableStateOf(listaGimnasios[0]) }
     var gimnasioExpanded by remember { mutableStateOf(false) }
@@ -235,7 +235,7 @@ fun UserScreen(navController: NavController) {
                                 peso = peso.toDoubleOrNull() ?: 0.0,
                                 altura = altura.toDoubleOrNull() ?: 0.0,
                                 genero = genero,
-                                gymId = if (gimnasioSeleccionado == "Otro / No encuentro mi gimnasio") "libre" else gimnasioSeleccionado,
+                                gymId = gimnasioSeleccionado,
                                 grupoMuscularFavorito = grupoMuscular,
                                 tiempoEntrenando = tiempoEntrenando
                             )

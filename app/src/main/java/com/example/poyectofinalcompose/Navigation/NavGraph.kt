@@ -7,12 +7,17 @@ import androidx.navigation.compose.composable
 import com.example.poyectofinalcompose.ui.screens.LoginScreen
 import com.example.poyectofinalcompose.ui.screens.UserScreen
 import com.example.poyectofinalcompose.ui.screens.PantallaGimnasios
+import com.example.poyectofinalcompose.ui.screens.PantallaUsuariosPorGimnasio
 
 // Definición de pantallas válidas
 open class Screen(val route: String) {
     object Login : Screen("login")
     object User : Screen("user")
     object Gym : Screen("gimnasios")
+    object UsuariosPorGimnasio : Screen("usuariosPorGimnasio/{gymId}") {
+        fun createRoute(gymId: String) = "usuariosPorGimnasio/$gymId"
+    }
+
 }
 
 // Configuración de navegación
@@ -33,5 +38,11 @@ fun NavGraph(navController: NavHostController, isDarkTheme: Boolean, onThemeChan
         composable(Screen.Gym.route) {
             PantallaGimnasios(navController)
         }
+
+        composable(Screen.UsuariosPorGimnasio.route) { backStackEntry ->
+            val gymId = backStackEntry.arguments?.getString("gymId") ?: "desconocido"
+            PantallaUsuariosPorGimnasio(navController, gymId)
+        }
+
     }
 }

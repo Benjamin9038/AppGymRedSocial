@@ -51,14 +51,17 @@ fun LoginScreen(navController: NavController) {
         // BOTÓN INICIAR SESIÓN
         Button(
             onClick = {
+                // Inicia sesión en Firebase Auth con el correo y la contraseña que se ingresa
                 auth.signInWithEmailAndPassword(email.trim(), password.trim())
                     .addOnSuccessListener { result ->
+                        //obtenemos el uid del usuasrio
                         val uid = result.user?.uid ?: return@addOnSuccessListener
 
+                        // Consultamos en Firestore si ese usuario tiene datos
                         db.collection("users").document(uid).get()
                             .addOnSuccessListener { document ->
                                 if (document.exists()) {
-                                    // Usuario ya tiene perfil ir a gimnasios
+                                    // llevamos a la lista de gimnasios al ususario
                                     navController.navigate(Screen.Gym.route)
                                 } else {
                                     // Usuario existe en Auth pero no tiene datos ir a completar perfil
