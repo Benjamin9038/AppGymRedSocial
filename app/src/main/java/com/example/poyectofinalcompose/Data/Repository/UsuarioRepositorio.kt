@@ -28,11 +28,11 @@ class UserRepository {
             .get()
             .addOnSuccessListener { result ->
                 val usuarios = result.mapNotNull { it.toObject(Usuario::class.java) }
-                Log.d("UserRepository", "✅ Usuarios encontrados en '$gymId': ${usuarios.size}")
+                Log.d("UserRepository", "Usuarios encontrados en '$gymId': ${usuarios.size}")
                 onResult(usuarios)
             }
             .addOnFailureListener { e ->
-                Log.e("UserRepository", "❌ Error al obtener usuarios: ${e.message}")
+                Log.e("UserRepository", "Error al obtener usuarios: ${e.message}")
                 onResult(emptyList()) // En caso de error, devuelve lista vacía
             }
     }

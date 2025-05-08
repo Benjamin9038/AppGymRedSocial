@@ -8,16 +8,22 @@ import com.example.poyectofinalcompose.ui.screens.LoginScreen
 import com.example.poyectofinalcompose.ui.screens.UserScreen
 import com.example.poyectofinalcompose.ui.screens.PantallaGimnasios
 import com.example.poyectofinalcompose.ui.screens.PantallaUsuariosPorGimnasio
+import com.example.poyectofinalcompose.ui.screens.PantallaChat
 
 // Definición de pantallas válidas
 open class Screen(val route: String) {
     object Login : Screen("login")
     object User : Screen("user")
     object Gym : Screen("gimnasios")
+
     object UsuariosPorGimnasio : Screen("usuariosPorGimnasio/{gymId}") {
         fun createRoute(gymId: String) = "usuariosPorGimnasio/$gymId"
     }
 
+    object Chat : Screen("chat/{receptorUid}/{receptorNombre}") {
+        fun createRoute(receptorUid: String, receptorNombre: String) =
+            "chat/$receptorUid/$receptorNombre"
+    }
 }
 
 // Configuración de navegación
@@ -44,5 +50,10 @@ fun NavGraph(navController: NavHostController, isDarkTheme: Boolean, onThemeChan
             PantallaUsuariosPorGimnasio(navController, gymId)
         }
 
+        composable(Screen.Chat.route) { backStackEntry ->
+            val uid = backStackEntry.arguments?.getString("receptorUid") ?: ""
+            val nombre = backStackEntry.arguments?.getString("receptorNombre") ?: ""
+            PantallaChat(navController, uid, nombre)
+        }
     }
 }

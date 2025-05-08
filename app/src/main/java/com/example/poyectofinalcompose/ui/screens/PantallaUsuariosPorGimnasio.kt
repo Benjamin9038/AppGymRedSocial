@@ -1,6 +1,7 @@
 package com.example.poyectofinalcompose.ui.screens
 
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -86,7 +87,11 @@ fun PantallaUsuariosPorGimnasio(navController: NavController, gymId: String) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp)
-                            ) {
+                                    .clickable {
+                                        navController.navigate("chat/${usuario.uid}/${usuario.nombre}")
+                                    }
+                            )
+                            {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text("Nombre: ${usuario.nombre}", fontWeight = FontWeight.Bold)
                                     Text("Grupo favorito: ${usuario.grupoMuscularFavorito}")
