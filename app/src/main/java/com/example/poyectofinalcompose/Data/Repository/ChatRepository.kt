@@ -34,10 +34,10 @@ class ChatRepository {
             .document(chatId)
             .collection("mensajes")
             .orderBy("timestamp", Query.Direction.ASCENDING) //Significa orden ascendente es decir, del más antiguo al más reciente
-            .addSnapshotListener { snapshots, error -> //snapshot es una especie de "foto" del estado actual de los documentos que ha devuelto la consulta de Firestore.
+            .addSnapshotListener { snapshots, error -> //snapshot es una especie de foto del estado actual de los documentos que ha devuelto la consulta de Firestore.
                 if (error != null || snapshots == null) {
                     onMensajesRecibidos(emptyList())
-                    return@addSnapshotListener //Es un "listener en tiempo real" de Firebase Firestore.
+                    return@addSnapshotListener //Es como un listener en tiempo real de Firebase Firestore.
                 }
 
                 val mensajes = snapshots.documents.mapNotNull { it.toObject(Mensaje::class.java) }
