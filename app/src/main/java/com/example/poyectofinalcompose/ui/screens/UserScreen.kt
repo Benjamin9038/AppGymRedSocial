@@ -19,6 +19,12 @@ import com.example.poyectofinalcompose.Data.Model.Usuario
 import com.example.poyectofinalcompose.Data.Repository.UserRepository
 import com.example.poyectofinalcompose.Navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import coil.compose.rememberAsyncImagePainter
+import com.google.firebase.storage.FirebaseStorage
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
