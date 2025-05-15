@@ -14,6 +14,15 @@ import androidx.navigation.NavController
 import com.example.poyectofinalcompose.Data.Model.Usuario
 import com.example.poyectofinalcompose.Data.Repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,14 +99,38 @@ fun PantallaUsuariosPorGimnasio(navController: NavController, gymId: String) {
                                     .clickable {
                                         navController.navigate("chat/${usuario.uid}/${usuario.nombre}")
                                     }
-                            )
-                            {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text("Nombre: ${usuario.nombre}", fontWeight = FontWeight.Bold)
-                                    Text("Grupo favorito: ${usuario.grupoMuscularFavorito}")
-                                    Text("Tiempo entrenando: ${usuario.tiempoEntrenando}")
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (!usuario.fotoUrl.isNullOrBlank()) {
+                                        Image(
+                                            painter = rememberAsyncImagePainter(usuario.fotoUrl),
+                                            contentDescription = "Foto de ${usuario.nombre}",
+                                            modifier = Modifier
+                                                .size(64.dp)
+                                                .clip(CircleShape)
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = "Sin foto",
+                                            modifier = Modifier.size(64.dp)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    Column {
+                                        Text("Nombre: ${usuario.nombre}", fontWeight = FontWeight.Bold)
+                                        Text("Grupo favorito: ${usuario.grupoMuscularFavorito}")
+                                        Text("Tiempo entrenando: ${usuario.tiempoEntrenando}")
+                                    }
                                 }
                             }
+
                         }
                     }
                 }

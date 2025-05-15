@@ -1,5 +1,9 @@
 package com.example.poyectofinalcompose.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,14 +19,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.poyectofinalcompose.Data.Model.Usuario
 import com.example.poyectofinalcompose.Data.Repository.UserRepository
 import com.example.poyectofinalcompose.Navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.storage.FirebaseStorage
 
 
@@ -61,6 +62,45 @@ fun UserScreen(navController: NavController) {
     var tiempoExpanded by remember { mutableStateOf(false) }
 
     var errorMessage by remember { mutableStateOf("") }
+
+    // Imagen seleccionada y launcher para abrir la galería
+    var imagenUri by remember { mutableStateOf<Uri?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        imagenUri = uri
+    }
+
+    fun guardarUsuarioConFoto(uid: String, fotoUrl: String?) {
+        val nuevoUsuario = Usuario(
+            uid = uid,
+            email = email,
+            nombre = nombre,
+            edad = edad.toIntOrNull() ?: 0,
+            peso = peso.toDoubleOrNull() ?: 0.0,
+            altura = altura.toDoubleOrNull() ?: 0.0,
+            genero = genero,
+            gymId = gimnasioSeleccionado,
+            grupoMuscularFavorito = grupoMuscular,
+            tiempoEntrenando = tiempoEntrenando,
+            fotoUrl = fotoUrl
+        )
+
+        userRepository.guardarUsuario(nuevoUsuario) { success, error ->
+            if (success) {
+                auth.signInWithEmailAndPassword(email.trim(), password.trim())
+                    .addOnSuccessListener {
+                        navController.navigate(Screen.Gym.route)
+                    }
+                    .addOnFailureListener {
+                        errorMessage = "Cuenta creada pero fallo al iniciar sesión: ${it.message}"
+                    }
+            } else {
+                errorMessage = "Error al guardar datos: $error"
+            }
+        }
+    }
 
     // Contenedor principal con scroll vertical
     Column(
@@ -223,60 +263,86 @@ fun UserScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Título que indica al usuario que puede seleccionar una foto de perfil, pero no es obligatorio
+        Text("Foto de perfil (opcional)", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+// Si el usuario ha seleccionado una imagen se muestra en pantalla
+        imagenUri?.let {
+            Image(
+                painter = rememberAsyncImagePainter(it), // Usa Coil para cargar la imagen desde la URI
+                contentDescription = "Foto seleccionada", // Descripción para accesibilidad
+                modifier = Modifier
+                    .size(120.dp)
+                    .padding(8.dp)
+            )
+        }
+
+// Botón que lanza la galería del dispositivo para seleccionar una imagen
+        Button(onClick = { launcher.launch("image/*" +
+                "") }) {
+            Text("Seleccionar imagen desde galería") // Texto que aparece en el botón
+        }
+
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+
         Button(
             onClick = {
                 if (email.isNotBlank() && password.length >= 6) {
-                    // Intentar crear cuenta en Firebase Authentication con email y contraseña
+
+                    // Crea un usuario en Firebase Authentication con el email y contraseña proporcionados
                     auth.createUserWithEmailAndPassword(email.trim(), password.trim())
                         .addOnSuccessListener { result ->
-                            // Obtener el UID generado por Firebase para este nuevo usuario
+                            // Obtiene el UID generado automáticamente por Firebase para este nuevo usuario
                             val uid = result.user?.uid ?: return@addOnSuccessListener
 
-                            //crea un objeto Usuario con los datos introducidos en el formulario
-                            val nuevoUsuario = Usuario(
-                                uid = uid,
-                                email = email,
-                                nombre = nombre,
-                                edad = edad.toIntOrNull() ?: 0,
-                                peso = peso.toDoubleOrNull() ?: 0.0,
-                                altura = altura.toDoubleOrNull() ?: 0.0,
-                                genero = genero,
-                                gymId = gimnasioSeleccionado,
-                                grupoMuscularFavorito = grupoMuscular,
-                                tiempoEntrenando = tiempoEntrenando
-                            )
+                            // Si el usuario ha seleccionado una imagen, procede a subirla a Firebase Storage
+                            if (imagenUri != null) {
+                                // Define la ruta en Firebase Storage donde se guardará la imagen
+                                val storageRef = FirebaseStorage.getInstance().reference
+                                    .child("fotos_perfil/$uid.jpg") //crea una carpeta fotos_perfil y guarda UID.jpg dentro
 
-                            //Guarda el usuario en Firestore a través del repositorio
-                            userRepository.guardarUsuario(nuevoUsuario) { success, error ->
-                                if (success) {
-                                    // si se ha guardado correctamente, inicia sesion con el nuevo usuario
-                                    auth.signInWithEmailAndPassword(email.trim(), password.trim())
-                                        .addOnSuccessListener {
-                                            navController.navigate(Screen.Gym.route)
-                                        }
-                                        .addOnFailureListener {
-                                            errorMessage = "Cuenta creada pero fallo al iniciar sesión: ${it.message}"
-                                        }
-                                } else {
-                                    errorMessage = "Error al guardar datos: $error"
-                                }
+                                // Sube la imagen al Storage
+                                storageRef.putFile(imagenUri!!)
+                                    // Cuando se suba correctamente, solicita la URL pública de descarga
+                                    .continueWithTask { task ->
+                                        if (!task.isSuccessful) throw task.exception ?: Exception("Fallo al subir imagen")
+                                        storageRef.downloadUrl // Devuelve la URL de la imagen
+                                    }
+                                    // Si la imagen se subió y se obtuvo la URL, guarda el usuario con esa URL
+                                    .addOnSuccessListener { uri ->
+                                        guardarUsuarioConFoto(uid, uri.toString())
+                                    }
+
+                                    .addOnFailureListener {
+                                        errorMessage = "Error al subir la imagen: ${it.message}"
+                                    }
+                            } else {
+
+                                guardarUsuarioConFoto(uid, null)
                             }
                         }
+                        // Si falló la creación de la cuenta (por ejemplo, email inválido o ya en uso)
                         .addOnFailureListener {
                             errorMessage = "Error al crear cuenta: ${it.message}"
                         }
                 } else {
+                    // Si los campos no están bien completados, muestra un mensaje de validación
                     errorMessage = "Completa todos los campos y usa una contraseña válida (mínimo 6 caracteres)."
                 }
+
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Crear cuenta")
         }
 
+
         if (errorMessage.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(errorMessage, color = MaterialTheme.colorScheme.error)
         }
     }
+
 }
