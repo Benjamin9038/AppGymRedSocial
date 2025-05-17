@@ -15,7 +15,7 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaGimnasios(navController: NavController) {
+fun PantallaGimnasios(navController: NavController){
     val gimnasios = listOf(
         "Basic Fit Albacete",
         "McFit Albacete",

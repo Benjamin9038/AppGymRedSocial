@@ -26,7 +26,12 @@ import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaUsuariosPorGimnasio(navController: NavController, gymId: String) {
+fun PantallaUsuariosPorGimnasio(
+    bottomNavController: NavController,
+    globalNavController: NavController,
+    gymId: String
+)
+{
     val userRepository = remember { UserRepository() }
 
     var usuarios by remember { mutableStateOf<List<Usuario>>(emptyList()) }
@@ -97,7 +102,7 @@ fun PantallaUsuariosPorGimnasio(navController: NavController, gymId: String) {
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp)
                                     .clickable {
-                                        navController.navigate("chat/${usuario.uid}/${usuario.nombre}")
+                                        globalNavController.navigate("chat/${usuario.uid}/${usuario.nombre}")
                                     }
                             ) {
                                 Row(

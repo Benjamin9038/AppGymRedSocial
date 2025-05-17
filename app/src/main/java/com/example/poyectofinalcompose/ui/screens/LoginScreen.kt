@@ -62,7 +62,8 @@ fun LoginScreen(navController: NavController) {
                             .addOnSuccessListener { document ->
                                 if (document.exists()) {
                                     // llevamos a la lista de gimnasios al ususario
-                                    navController.navigate(Screen.Gym.route)
+                                    navController.navigate(Screen.BottomBar.route)
+
                                 } else {
                                     // Usuario existe en Auth pero no tiene datos ir a completar perfil
                                     navController.navigate(Screen.User.route)

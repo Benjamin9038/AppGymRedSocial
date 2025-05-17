@@ -91,7 +91,11 @@ fun UserScreen(navController: NavController) {
             if (success) {
                 auth.signInWithEmailAndPassword(email.trim(), password.trim())
                     .addOnSuccessListener {
-                        navController.navigate(Screen.Gym.route)
+                        navController.navigate(Screen.BottomBar.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+
                     }
                     .addOnFailureListener {
                         errorMessage = "Cuenta creada pero fallo al iniciar sesión: ${it.message}"
