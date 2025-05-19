@@ -3,6 +3,8 @@ package com.example.poyectofinalcompose.Data.Repository
 import com.example.poyectofinalcompose.Data.Model.Mensaje
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
+
 
 class ChatRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -14,17 +16,28 @@ class ChatRepository {
                                                              //en un solo String, separados por el símbolo _
     }
 
-    // Envía un mensaje entre dos usuarios
     fun enviarMensaje(mensaje: Mensaje, onResult: (Boolean, String?) -> Unit) {
         val chatId = generarChatId(mensaje.emisorUid, mensaje.receptorUid)
+        val chatRef = db.collection("chats").document(chatId)
 
-        db.collection("chats")
-            .document(chatId)
-            .collection("mensajes")
-            .add(mensaje)
-            .addOnSuccessListener { onResult(true, null) }
-            .addOnFailureListener { e -> onResult(false, e.message) }
+        // Creamos el documento raíz si no existe con el campo placeholder
+        chatRef.set(mapOf("placeholder" to true), SetOptions.merge())
+            .addOnSuccessListener {
+                // Una vez creado el documento, agregamos el mensaje
+                chatRef.collection("mensajes")
+                    .add(mensaje)
+                    .addOnSuccessListener {
+                        onResult(true, null)
+                    }
+                    .addOnFailureListener { e ->
+                        onResult(false, "Error al guardar el mensaje: ${e.message}")
+                    }
+            }
+            .addOnFailureListener { e ->
+                onResult(false, "Error al crear el chat: ${e.message}")
+            }
     }
+
 
     // Escucha los mensajes en tiempo real entre dos usuarios
     fun obtenerMensajes(uid1: String, uid2: String, onMensajesRecibidos: (List<Mensaje>) -> Unit) {

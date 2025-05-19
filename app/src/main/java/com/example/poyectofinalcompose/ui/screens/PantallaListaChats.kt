@@ -40,8 +40,8 @@ fun PantallaListaChats(navController: NavController) {
 
                 for (doc in chatDocs) {
                     val ids = doc.id.split("_")
-                    if (ids.contains(currentUid)) {
-                        val otro = ids.first { it != currentUid }
+                    if (ids.contains(currentUid) && ids.size == 2) {
+                        val otro = if (ids[0] == currentUid) ids[1] else ids[0]
                         otrosUids.add(otro)
                     }
                 }
@@ -59,8 +59,15 @@ fun PantallaListaChats(navController: NavController) {
                         usuariosConChat = result.mapNotNull { it.toObject(Usuario::class.java) }
                         cargando = false
                     }
+                    .addOnFailureListener {
+                        cargando = false
+                    }
+            }
+            .addOnFailureListener {
+                cargando = false
             }
     }
+
 
     Scaffold(
         topBar = {
@@ -77,46 +84,57 @@ fun PantallaListaChats(navController: NavController) {
                 CircularProgressIndicator()
             }
         } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp)
-            ) {
-                items(usuariosConChat) { usuario ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .clickable {
-                                navController.navigate("chat/${usuario.uid}/${usuario.nombre}")
-                            }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(16.dp)
+            if (usuariosConChat.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No tienes chats activos aún.")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = 16.dp)
+                ) {
+                    items(usuariosConChat) { usuario ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .clickable {
+                                    navController.navigate("chat/${usuario.uid}/${usuario.nombre}")
+                                }
                         ) {
-                            if (!usuario.fotoUrl.isNullOrEmpty()) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(usuario.fotoUrl),
-                                    contentDescription = "Foto",
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(CircleShape)
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Sin foto",
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                if (!usuario.fotoUrl.isNullOrEmpty()) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(usuario.fotoUrl),
+                                        contentDescription = "Foto",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(CircleShape)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Sin foto",
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                }
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
 
-                            Column {
-                                Text(usuario.nombre, fontWeight = FontWeight.Bold)
-                                Text("Toca para continuar el chat")
+                                Column {
+                                    Text(usuario.nombre, fontWeight = FontWeight.Bold)
+                                    Text("Toca para continuar el chat")
+                                }
                             }
                         }
                     }

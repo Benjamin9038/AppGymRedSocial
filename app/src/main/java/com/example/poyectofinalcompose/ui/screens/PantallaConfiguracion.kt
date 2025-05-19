@@ -99,14 +99,6 @@ fun PantallaConfiguracion(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = datos.email,
-                onValueChange = {},
-                label = { Text("Correo electrónico (no editable)") },
-                enabled = false,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
                 label = { Text("Nombre") },

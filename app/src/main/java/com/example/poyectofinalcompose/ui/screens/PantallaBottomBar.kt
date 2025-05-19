@@ -37,14 +37,23 @@ fun PantallaBottomBar(navController: NavController) {
                         label = { Text(screen.titulo) },
                         selected = currentRoute == screen.ruta,
                         onClick = {
-                            bottomNavController.navigate(screen.ruta) {
-                                popUpTo(bottomNavController.graph.findStartDestination().id) {
-                                    saveState = true
+                            if (screen.ruta == BottomBarScreen.Inicio.ruta) {
+                                // Vuelve al inicio (PantallaGimnasios) forzadamente
+                                bottomNavController.popBackStack(BottomBarScreen.Inicio.ruta, inclusive = false)
+                                bottomNavController.navigate(BottomBarScreen.Inicio.ruta) {
+                                    launchSingleTop = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                            } else {
+                                bottomNavController.navigate(screen.ruta) {
+                                    popUpTo(bottomNavController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
                         }
+
 
                     )
                 }
@@ -63,7 +72,7 @@ fun PantallaBottomBar(navController: NavController) {
                 PantallaListaChats(bottomNavController)
             }
             composable(BottomBarScreen.Configuracion.ruta) {
-                UserScreen(navController) // temporal, luego será PantallaConfiguracion
+                PantallaConfiguracion(navController)
             }
             composable("usuariosPorGimnasio/{gymId}") { backStackEntry ->
                 val gymId = backStackEntry.arguments?.getString("gymId") ?: ""
