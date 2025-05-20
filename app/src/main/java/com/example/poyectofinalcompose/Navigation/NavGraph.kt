@@ -16,6 +16,7 @@ import com.example.poyectofinalcompose.ui.screens.UserScreen
 import com.example.poyectofinalcompose.ui.screens.PantallaGimnasios
 import com.example.poyectofinalcompose.ui.screens.PantallaUsuariosPorGimnasio
 import com.example.poyectofinalcompose.ui.screens.PantallaChat
+import java.net.URLDecoder
 
 
 // Definición de pantallas válidas
@@ -62,7 +63,8 @@ fun NavGraph(navController: NavHostController, isDarkTheme: Boolean, onThemeChan
 
         composable(Screen.Chat.route) { backStackEntry ->
             val uid = backStackEntry.arguments?.getString("receptorUid") ?: ""
-            val nombre = backStackEntry.arguments?.getString("receptorNombre") ?: ""
+            val nombreEncoded = backStackEntry.arguments?.getString("receptorNombre") ?: ""
+            val nombre = URLDecoder.decode(nombreEncoded, "UTF-8")
             PantallaChat(navController, uid, nombre)
         }
 

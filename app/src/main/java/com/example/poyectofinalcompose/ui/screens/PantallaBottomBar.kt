@@ -83,6 +83,14 @@ fun PantallaBottomBar(navController: NavController) {
                 )
             }
 
+            composable("chat/{receptorUid}/{receptorNombre}") { backStackEntry ->
+                val receptorUid = backStackEntry.arguments?.getString("receptorUid") ?: ""
+                val receptorNombreEncoded = backStackEntry.arguments?.getString("receptorNombre") ?: ""
+                val receptorNombre = java.net.URLDecoder.decode(receptorNombreEncoded, "UTF-8")
+                PantallaChat(bottomNavController, receptorUid, receptorNombre)
+            }
+
+
 
         }
     }
