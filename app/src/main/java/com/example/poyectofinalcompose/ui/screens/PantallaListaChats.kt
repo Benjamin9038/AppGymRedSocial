@@ -1,11 +1,13 @@
 package com.example.poyectofinalcompose.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -13,22 +15,31 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.poyectofinalcompose.Data.Model.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.net.Uri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaListaChats(navController: NavController) {
+fun PantallaListaChats(
+    localNavController: NavController,
+    globalNavController: NavController
+)
+ {
     val currentUid = FirebaseAuth.getInstance().currentUser?.uid
     val db = FirebaseFirestore.getInstance()
 
     var usuariosConChat by remember { mutableStateOf<List<Usuario>>(emptyList()) }
     var cargando by remember { mutableStateOf(true) }
+    var imagenAmpliada by remember { mutableStateOf<String?>(null) } // Estado para mostrar imagen ampliada
 
     LaunchedEffect(currentUid) {
         if (currentUid == null) return@LaunchedEffect
@@ -68,10 +79,39 @@ fun PantallaListaChats(navController: NavController) {
             }
     }
 
+    // Mostrar imagen ampliada si se ha seleccionado una
+    if (imagenAmpliada != null) {
+        AlertDialog(
+            onDismissRequest = { imagenAmpliada = null },
+            confirmButton = {},
+            text = {
+                Image(
+                    painter = rememberAsyncImagePainter(imagenAmpliada),
+                    contentDescription = "Imagen ampliada",
+                    modifier = Modifier
+                        .size(250.dp)
+                        .clip(RoundedCornerShape(4.dp)) // Bordes suavemente redondeados
+                        .padding(8.dp)
+                )
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Tus Chats") })
+            TopAppBar(
+                title = {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Chats",
+                            modifier = Modifier.align(Alignment.Center),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+
+                        )
+                    }
+                }
+            )
         }
     ) { padding ->
         if (cargando) {
@@ -106,7 +146,10 @@ fun PantallaListaChats(navController: NavController) {
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp)
                                 .clickable {
-                                    navController.navigate("chat/${usuario.uid}/${usuario.nombre}")
+                                    val fotoCodificada = Uri.encode(usuario.fotoUrl ?: "null")
+                                    globalNavController.navigate("chat/${usuario.uid}/${usuario.nombre}/$fotoCodificada")
+
+
                                 }
                         ) {
                             Row(
@@ -117,15 +160,20 @@ fun PantallaListaChats(navController: NavController) {
                                     Image(
                                         painter = rememberAsyncImagePainter(usuario.fotoUrl),
                                         contentDescription = "Foto",
+                                        contentScale = ContentScale.Crop, // Ajusta visualmente sin dejar márgenes blancos
                                         modifier = Modifier
-                                            .size(48.dp)
-                                            .clip(CircleShape)
+                                            .size(width = 50.dp, height = 50.dp)
+                                            .clip(RoundedCornerShape(35.dp)) // Bordes suavemente redondeados
+                                            .clickable { imagenAmpliada = usuario.fotoUrl }
                                     )
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.Person,
                                         contentDescription = "Sin foto",
                                         modifier = Modifier.size(48.dp)
+                                            .size(width = 50.dp, height = 50.dp)
+                                            .clip(RoundedCornerShape(35.dp)) // Bordes suavemente redondeados
+
                                     )
                                 }
 

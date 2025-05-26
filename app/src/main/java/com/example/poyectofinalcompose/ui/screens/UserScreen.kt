@@ -9,13 +9,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -30,22 +36,15 @@ import com.google.firebase.storage.FirebaseStorage
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(navController: NavController) {
-    //Variables de Firebase Auth y el repositorio para guardar usuario
     val auth = FirebaseAuth.getInstance()
     val userRepository = remember { UserRepository() }
+    val azulMarino = Color(0xFF005A9C)
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
     var edad by remember { mutableStateOf("") }
-    var peso by remember { mutableStateOf("") }
-    var altura by remember { mutableStateOf("") }
-    var genero by remember { mutableStateOf("Masculino") }
 
-    var masculino by remember { mutableStateOf(true) }
-    var femenino by remember { mutableStateOf(false) }
-
-    // Listado y selección de gimnasio
     val listaGimnasios = listOf(
         "Basic Fit Albacete", "McFit Albacete", "Fitness Villarrobledo",
         "Tiger Villarrobledo", "FraileGym Villarrobledo", "Centro Albacete", "Otro"
@@ -53,24 +52,18 @@ fun UserScreen(navController: NavController) {
     var gimnasioSeleccionado by remember { mutableStateOf(listaGimnasios[0]) }
     var gimnasioExpanded by remember { mutableStateOf(false) }
 
-    val listaGrupos = listOf("Pecho", "Espalda", "Pierna", "Hombro", "Bíceps", "Tríceps", "Abdominales")
+    val listaGrupos = listOf("Pecho", "Espalda", "Pierna", "Hombro", "Bíceps", "Tríceps", "Abdomen")
     var grupoMuscular by remember { mutableStateOf(listaGrupos[0]) }
     var grupoExpanded by remember { mutableStateOf(false) }
 
-    val tiempos = listOf("menos de 6 meses", "6-12 meses", "1-3 años", "más de 3 años")
+    val tiempos = listOf("Menos de 6 meses", "6-12 meses entrenados", "1-3 años entrenados", "Más de 3 años")
     var tiempoEntrenando by remember { mutableStateOf(tiempos[0]) }
     var tiempoExpanded by remember { mutableStateOf(false) }
 
     var errorMessage by remember { mutableStateOf("") }
-
-    // Imagen seleccionada y launcher para abrir la galería
     var imagenUri by remember { mutableStateOf<Uri?>(null) }
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        imagenUri = uri
-    }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> imagenUri = uri }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     fun guardarUsuarioConFoto(uid: String, fotoUrl: String?) {
         val nuevoUsuario = Usuario(
@@ -78,15 +71,13 @@ fun UserScreen(navController: NavController) {
             email = email,
             nombre = nombre,
             edad = edad.toIntOrNull() ?: 0,
-            peso = peso.toDoubleOrNull() ?: 0.0,
-            altura = altura.toDoubleOrNull() ?: 0.0,
-            genero = genero,
+            peso = 0.0,
+            altura = 0.0,
             gymId = gimnasioSeleccionado,
             grupoMuscularFavorito = grupoMuscular,
             tiempoEntrenando = tiempoEntrenando,
             fotoUrl = fotoUrl
         )
-
         userRepository.guardarUsuario(nuevoUsuario) { success, error ->
             if (success) {
                 auth.signInWithEmailAndPassword(email.trim(), password.trim())
@@ -95,7 +86,6 @@ fun UserScreen(navController: NavController) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                             launchSingleTop = true
                         }
-
                     }
                     .addOnFailureListener {
                         errorMessage = "Cuenta creada pero fallo al iniciar sesión: ${it.message}"
@@ -106,7 +96,6 @@ fun UserScreen(navController: NavController) {
         }
     }
 
-    // Contenedor principal con scroll vertical
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -114,94 +103,112 @@ fun UserScreen(navController: NavController) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Crear Cuenta", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text("Crear Cuenta en FitMate", fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campos del formulario
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Correo electrónico") },
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            label = {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text("Correo electrónico")
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = azulMarino,
+                unfocusedBorderColor = azulMarino,
+                focusedLabelColor = azulMarino,
+                cursorColor = azulMarino
+            )
         )
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            //para que no salgan los caracteres de la contraseña
-            visualTransformation = PasswordVisualTransformation(),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            label = {
+                Text(
+                    text = "Contraseña",
+                    modifier = Modifier.padding(start = 102.dp)
+                )
+            }
+            ,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val icon = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility
+                val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = icon, contentDescription = description)
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = azulMarino,
+                unfocusedBorderColor = azulMarino,
+                focusedLabelColor = azulMarino,
+                cursorColor = azulMarino
+            )
         )
+
 
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
-            label = { Text("Nombre") },
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            label = {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text("Nombre")
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = azulMarino,
+                unfocusedBorderColor = azulMarino,
+                focusedLabelColor = azulMarino,
+                cursorColor = azulMarino
+            )
         )
 
         OutlinedTextField(
             value = edad,
             onValueChange = { edad = it },
-            label = { Text("Edad") },
-            //para que en el teclado solo salgan numeros
+            label = {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text("Edad")
+                }
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = azulMarino,
+                unfocusedBorderColor = azulMarino,
+                focusedLabelColor = azulMarino,
+                cursorColor = azulMarino
+            )
         )
-
-        OutlinedTextField(
-            value = peso,
-            onValueChange = { peso = it },
-            label = { Text("Peso (kg)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-        )
-
-        OutlinedTextField(
-            value = altura,
-            onValueChange = { altura = it },
-            label = { Text("Altura (cm)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Text("Género", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = masculino, onCheckedChange = { isChecked ->
-                masculino = isChecked
-                femenino = !isChecked
-                genero = "Masculino"
-            })
-            Text("Masculino")
-            Spacer(modifier = Modifier.width(16.dp))
-            Checkbox(checked = femenino, onCheckedChange = {isChecked ->
-                femenino = isChecked
-                masculino = !isChecked
-                genero = "Femenino"
-            })
-            Text("Femenino")
-        }
 
         // Dropdown de gimnasio
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Selecciona tu gimnasio", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Acerca de tus GymSkills", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+        Spacer(modifier = Modifier.height(16.dp))
         ExposedDropdownMenuBox(expanded = gimnasioExpanded, onExpandedChange = { gimnasioExpanded = !gimnasioExpanded }) {
             TextField(
                 value = gimnasioSeleccionado,
                 onValueChange = {},
-                readOnly = true, //Para que el usuario no pueda editar nada
-                label = { Text("Gimnasio") },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.menuAnchor()//indica que el Dropdown se mostrará justo debajo del TextField
-                    .fillMaxWidth()
+                readOnly = true,
+                label = {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text("Selecciona el Gimnasio en el que entrenas")
+                    }
+                },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = azulMarino,
+                    unfocusedIndicatorColor = azulMarino,
+                    focusedLabelColor = azulMarino,
+                    cursorColor = azulMarino
+                )
             )
             DropdownMenu(expanded = gimnasioExpanded, onDismissRequest = { gimnasioExpanded = false }) {
                 listaGimnasios.forEach { gym ->
@@ -216,17 +223,24 @@ fun UserScreen(navController: NavController) {
             }
         }
 
-        // Dropdown de grupo muscular favorito
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Grupo muscular favorito", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         ExposedDropdownMenuBox(expanded = grupoExpanded, onExpandedChange = { grupoExpanded = !grupoExpanded }) {
             TextField(
                 value = grupoMuscular,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Grupo muscular") },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                label = {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text("Grupo muscular favorito")
+                    }
+                },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = azulMarino,
+                    unfocusedIndicatorColor = azulMarino,
+                    focusedLabelColor = azulMarino,
+                    cursorColor = azulMarino
+                )
             )
             DropdownMenu(expanded = grupoExpanded, onDismissRequest = { grupoExpanded = false }) {
                 listaGrupos.forEach { grupo ->
@@ -242,15 +256,23 @@ fun UserScreen(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Tiempo entrenando", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         ExposedDropdownMenuBox(expanded = tiempoExpanded, onExpandedChange = { tiempoExpanded = !tiempoExpanded }) {
             TextField(
                 value = tiempoEntrenando,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Tiempo entrenando") },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                label = {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text("Tiempo entrenado")
+                    }
+                },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = azulMarino,
+                    unfocusedIndicatorColor = azulMarino,
+                    focusedLabelColor = azulMarino,
+                    cursorColor = azulMarino
+                )
             )
             DropdownMenu(expanded = tiempoExpanded, onDismissRequest = { tiempoExpanded = false }) {
                 tiempos.forEach { tiempo ->
@@ -266,87 +288,64 @@ fun UserScreen(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Título que indica al usuario que puede seleccionar una foto de perfil, pero no es obligatorio
         Text("Foto de perfil (opcional)", fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
-// Si el usuario ha seleccionado una imagen se muestra en pantalla
         imagenUri?.let {
             Image(
-                painter = rememberAsyncImagePainter(it), // Usa Coil para cargar la imagen desde la URI
-                contentDescription = "Foto seleccionada", // Descripción para accesibilidad
-                modifier = Modifier
-                    .size(120.dp)
-                    .padding(8.dp)
+                painter = rememberAsyncImagePainter(it),
+                contentDescription = "Foto seleccionada",
+                modifier = Modifier.size(120.dp).padding(8.dp)
             )
         }
 
-// Botón que lanza la galería del dispositivo para seleccionar una imagen
-        Button(onClick = { launcher.launch("image/*" +
-                "") }) {
-            Text("Seleccionar imagen desde galería") // Texto que aparece en el botón
+        Button(
+            onClick = { launcher.launch("image/*") },
+            colors = ButtonDefaults.buttonColors(containerColor = azulMarino)
+        ) {
+            Text("Seleccionar imagen desde galería")
         }
 
-
         Spacer(modifier = Modifier.height(24.dp))
-
 
         Button(
             onClick = {
                 if (email.isNotBlank() && password.length >= 6) {
-
-                    // Crea un usuario en Firebase Authentication con el email y contraseña proporcionados
                     auth.createUserWithEmailAndPassword(email.trim(), password.trim())
                         .addOnSuccessListener { result ->
-                            // Obtiene el UID generado automáticamente por Firebase para este nuevo usuario
                             val uid = result.user?.uid ?: return@addOnSuccessListener
-
-                            // Si el usuario ha seleccionado una imagen, procede a subirla a Firebase Storage
                             if (imagenUri != null) {
-                                // Define la ruta en Firebase Storage donde se guardará la imagen
-                                val storageRef = FirebaseStorage.getInstance().reference
-                                    .child("fotos_perfil/$uid.jpg") //crea una carpeta fotos_perfil y guarda UID.jpg dentro
-
-                                // Sube la imagen al Storage
+                                val storageRef = FirebaseStorage.getInstance().reference.child("fotos_perfil/$uid.jpg")
                                 storageRef.putFile(imagenUri!!)
-                                    // Cuando se suba correctamente, solicita la URL pública de descarga
                                     .continueWithTask { task ->
                                         if (!task.isSuccessful) throw task.exception ?: Exception("Fallo al subir imagen")
-                                        storageRef.downloadUrl // Devuelve la URL de la imagen
+                                        storageRef.downloadUrl
                                     }
-                                    // Si la imagen se subió y se obtuvo la URL, guarda el usuario con esa URL
                                     .addOnSuccessListener { uri ->
                                         guardarUsuarioConFoto(uid, uri.toString())
                                     }
-
                                     .addOnFailureListener {
                                         errorMessage = "Error al subir la imagen: ${it.message}"
                                     }
                             } else {
-
                                 guardarUsuarioConFoto(uid, null)
                             }
                         }
-                        // Si falló la creación de la cuenta (por ejemplo, email inválido o ya en uso)
                         .addOnFailureListener {
                             errorMessage = "Error al crear cuenta: ${it.message}"
                         }
                 } else {
-                    // Si los campos no están bien completados, muestra un mensaje de validación
                     errorMessage = "Completa todos los campos y usa una contraseña válida (mínimo 6 caracteres)."
                 }
-
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = azulMarino)
         ) {
             Text("Crear cuenta")
         }
-
 
         if (errorMessage.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(errorMessage, color = MaterialTheme.colorScheme.error)
         }
     }
-
 }

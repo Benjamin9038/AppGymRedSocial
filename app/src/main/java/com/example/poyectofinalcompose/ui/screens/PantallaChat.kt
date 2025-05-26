@@ -1,25 +1,44 @@
 package com.example.poyectofinalcompose.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.poyectofinalcompose.Data.Model.Mensaje
 import com.example.poyectofinalcompose.Data.Repository.ChatRepository
 import com.google.firebase.auth.FirebaseAuth
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaChat(navController: NavController, receptorUid: String, receptorNombre: String) {
+fun PantallaChat(navController: NavController, receptorUid: String, receptorNombre: String, receptorFotoUrl: String?)
+ {
     val chatRepository = remember { ChatRepository() }
     val usuarioActual = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
+
     var mensajeTexto by remember { mutableStateOf("") }
     var listaMensajes by remember { mutableStateOf<List<Mensaje>>(emptyList()) }
+
+     val azulMarino = Color(0xFF005A9C)
+     var imagenAmpliada by remember { mutableStateOf(false) }
 
     // Escucha en tiempo real los mensajes entre los dos usuarios
     LaunchedEffect(Unit) {
@@ -30,9 +49,48 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Chat con $receptorNombre") }
-            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (!receptorFotoUrl.isNullOrEmpty()) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(receptorFotoUrl),
+                                    contentDescription = "Foto de perfil",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .clickable { imagenAmpliada = true },
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Sin foto",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = receptorNombre,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black
+                    )
+                )
+                Divider(color = Color.LightGray, thickness = 0.8.dp)
+            }
+
+
         },
         //La barra inferior incluye la caja de texto y el boton de enviar
         bottomBar = {
@@ -45,26 +103,42 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
                 OutlinedTextField(
                     value = mensajeTexto,
                     onValueChange = { mensajeTexto = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Escribe un mensaje...") }
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(24.dp)),
+                    placeholder = { Text("Escribe un mensaje...") },
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = azulMarino,
+                        unfocusedBorderColor = azulMarino,
+                        cursorColor = azulMarino
+                    )
                 )
+
+
                 //Boton de enviar
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = {
-                    if (mensajeTexto.isNotBlank()) {
-                        val mensaje = Mensaje(
-                            emisorUid = usuarioActual,
-                            receptorUid = receptorUid,
-                            contenido = mensajeTexto
-                        )
-                        chatRepository.enviarMensaje(mensaje) { success, error ->
-                            if (success) mensajeTexto = ""
-
+                Button(
+                    onClick = {
+                        if (mensajeTexto.isNotBlank()) {
+                            val mensaje = Mensaje(
+                                emisorUid = usuarioActual,
+                                receptorUid = receptorUid,
+                                contenido = mensajeTexto
+                            )
+                            chatRepository.enviarMensaje(mensaje) { success, _ ->
+                                if (success) mensajeTexto = ""
+                            }
                         }
-                    }
-                }) {
-                    Text("Enviar")
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = azulMarino),
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(12.dp),
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Text("→", color = Color.White)
                 }
+
             }
         }
     ) { padding ->
@@ -88,10 +162,13 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
                 ) {
                     //Cada mensaje se muestra como una burbuja con color diferente segun quien lo envia
                     Surface(
-                        color = if (mensajeMio) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                        color = if (mensajeMio) azulMarino else MaterialTheme.colorScheme.secondary,
                         shape = MaterialTheme.shapes.medium,
-                        modifier = Modifier.padding(4.dp)
-                    ) {
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .widthIn(max = 280.dp) // Limita el ancho de la burbuja
+                    )
+                    {
                         Text(
                             text = mensaje.contenido,
                             modifier = Modifier.padding(8.dp),
@@ -102,4 +179,23 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
             }
         }
     }
-}
+
+     if (imagenAmpliada && !receptorFotoUrl.isNullOrEmpty()) {
+         AlertDialog(
+             onDismissRequest = { imagenAmpliada = false },
+             confirmButton = {},
+             text = {
+                 Image(
+                     painter = rememberAsyncImagePainter(receptorFotoUrl),
+                     contentDescription = "Imagen ampliada",
+                     modifier = Modifier
+                         .size(250.dp)
+                         .clip(RoundedCornerShape(8.dp))
+                         .padding(8.dp),
+                     contentScale = ContentScale.Crop
+                 )
+             }
+         )
+     }
+
+ }

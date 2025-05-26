@@ -1,12 +1,12 @@
 package com.example.poyectofinalcompose.ui.screens
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,18 +37,17 @@ fun PantallaConfiguracion(navController: NavController) {
     val userRepository = remember { UserRepository() }
     val uid = auth.currentUser?.uid ?: return
     val context = LocalContext.current
+    val azulMarino = Color(0xFF005A9C)
 
     var usuario by remember { mutableStateOf<Usuario?>(null) }
     var imagenUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf("") }
     var cargando by remember { mutableStateOf(true) }
 
-    // launcher para imagen
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         imagenUri = uri
     }
 
-    // Carga datos del usuario actual
     LaunchedEffect(uid) {
         FirebaseFirestore.getInstance().collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
@@ -71,9 +71,6 @@ fun PantallaConfiguracion(navController: NavController) {
 
         var nombre by remember { mutableStateOf(datos.nombre) }
         var edad by remember { mutableStateOf(datos.edad.toString()) }
-        var peso by remember { mutableStateOf(datos.peso.toString()) }
-        var altura by remember { mutableStateOf(datos.altura.toString()) }
-        var genero by remember { mutableStateOf(datos.genero) }
         var gym by remember { mutableStateOf(datos.gymId) }
         var grupo by remember { mutableStateOf(datos.grupoMuscularFavorito) }
         var tiempo by remember { mutableStateOf(datos.tiempoEntrenando) }
@@ -81,8 +78,8 @@ fun PantallaConfiguracion(navController: NavController) {
         val listaGimnasios = listOf("Basic Fit Albacete", "McFit Albacete", "Fitness Villarrobledo",
             "Tiger Villarrobledo", "FraileGym Villarrobledo", "Centro Albacete", "Otro")
 
-        val listaGrupos = listOf("Pecho", "Espalda", "Pierna", "Hombro", "Bíceps", "Tríceps", "Abdominales")
-        val tiempos = listOf("menos de 6 meses", "6-12 meses", "1-3 años", "más de 3 años")
+        val listaGrupos = listOf("Pecho", "Espalda", "Pierna", "Hombro", "Bíceps", "Tríceps", "Abdomen")
+        val tiempos = listOf("menos de 6 meses", "6-12 meses entrenados", "1-3 años entrenados", "más de 3 años")
 
         var gimnasioExpanded by remember { mutableStateOf(false) }
         var grupoExpanded by remember { mutableStateOf(false) }
@@ -102,7 +99,13 @@ fun PantallaConfiguracion(navController: NavController) {
                 value = nombre,
                 onValueChange = { nombre = it },
                 label = { Text("Nombre") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = azulMarino,
+                    unfocusedBorderColor = azulMarino,
+                    focusedLabelColor = azulMarino,
+                    cursorColor = azulMarino
+                )
             )
 
             OutlinedTextField(
@@ -110,39 +113,19 @@ fun PantallaConfiguracion(navController: NavController) {
                 onValueChange = { edad = it },
                 label = { Text("Edad") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = azulMarino,
+                    unfocusedBorderColor = azulMarino,
+                    focusedLabelColor = azulMarino,
+                    cursorColor = azulMarino
+                )
             )
 
-            OutlinedTextField(
-                value = peso,
-                onValueChange = { peso = it },
-                label = { Text("Peso (kg)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Acerca de tus GymSkills", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = altura,
-                onValueChange = { altura = it },
-                label = { Text("Altura (cm)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            )
-
-            // Género (radio style)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = genero == "Masculino", onCheckedChange = {
-                    if (it) genero = "Masculino"
-                })
-                Text("Masculino")
-                Spacer(modifier = Modifier.width(16.dp))
-                Checkbox(checked = genero == "Femenino", onCheckedChange = {
-                    if (it) genero = "Femenino"
-                })
-                Text("Femenino")
-            }
-
-            // Dropdowns
             ExposedDropdownMenuBox(expanded = gimnasioExpanded, onExpandedChange = {
                 gimnasioExpanded = !gimnasioExpanded
             }) {
@@ -150,8 +133,18 @@ fun PantallaConfiguracion(navController: NavController) {
                     value = gym,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Gimnasio") },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text("Selecciona el Gimnasio en el que entrenas")
+                        }
+                    },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = azulMarino,
+                        unfocusedIndicatorColor = azulMarino,
+                        focusedLabelColor = azulMarino,
+                        cursorColor = azulMarino
+                    )
                 )
                 DropdownMenu(expanded = gimnasioExpanded, onDismissRequest = { gimnasioExpanded = false }) {
                     listaGimnasios.forEach {
@@ -172,8 +165,18 @@ fun PantallaConfiguracion(navController: NavController) {
                     value = grupo,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Grupo Muscular Favorito") },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text("Grupo muscular favorito")
+                        }
+                    },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = azulMarino,
+                        unfocusedIndicatorColor = azulMarino,
+                        focusedLabelColor = azulMarino,
+                        cursorColor = azulMarino
+                    )
                 )
                 DropdownMenu(expanded = grupoExpanded, onDismissRequest = { grupoExpanded = false }) {
                     listaGrupos.forEach {
@@ -194,8 +197,18 @@ fun PantallaConfiguracion(navController: NavController) {
                     value = tiempo,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Tiempo entrenando") },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text("Tiempo entrenado")
+                        }
+                    },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = azulMarino,
+                        unfocusedIndicatorColor = azulMarino,
+                        focusedLabelColor = azulMarino,
+                        cursorColor = azulMarino
+                    )
                 )
                 DropdownMenu(expanded = tiempoExpanded, onDismissRequest = { tiempoExpanded = false }) {
                     tiempos.forEach {
@@ -227,43 +240,62 @@ fun PantallaConfiguracion(navController: NavController) {
                 Icon(Icons.Default.Person, contentDescription = "Sin imagen", modifier = Modifier.size(100.dp))
             }
 
-            Button(onClick = { launcher.launch("image/*") }) {
+            Button(
+                onClick = { launcher.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(containerColor = azulMarino)
+            ) {
                 Text("Seleccionar nueva imagen")
             }
 
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = {
-                val usuarioActualizado = Usuario(
-                    uid = uid,
-                    email = datos.email,
-                    nombre = nombre,
-                    edad = edad.toIntOrNull() ?: 0,
-                    peso = peso.toDoubleOrNull() ?: 0.0,
-                    altura = altura.toDoubleOrNull() ?: 0.0,
-                    genero = genero,
-                    gymId = gym,
-                    grupoMuscularFavorito = grupo,
-                    tiempoEntrenando = tiempo,
-                    fotoUrl = datos.fotoUrl // temporal
-                )
+            val contexto = LocalContext.current
 
-                if (imagenUri != null) {
-                    val ref = FirebaseStorage.getInstance().reference.child("fotos_perfil/$uid.jpg")
-                    ref.putFile(imagenUri!!)
-                        .continueWithTask { task ->
-                            if (!task.isSuccessful) throw task.exception ?: Exception("Error al subir")
-                            ref.downloadUrl
+            Button(
+                onClick = {
+                    val usuarioActualizado = Usuario(
+                        uid = uid,
+                        email = datos.email,
+                        nombre = nombre,
+                        edad = edad.toIntOrNull() ?: 0,
+                        peso = 0.0,
+                        altura = 0.0,
+                        genero = "",
+                        gymId = gym,
+                        grupoMuscularFavorito = grupo,
+                        tiempoEntrenando = tiempo,
+                        fotoUrl = datos.fotoUrl
+                    )
+
+                    if (imagenUri != null) {
+                        val ref = FirebaseStorage.getInstance().reference.child("fotos_perfil/$uid.jpg")
+                        ref.putFile(imagenUri!!)
+                            .continueWithTask { task ->
+                                if (!task.isSuccessful) throw task.exception ?: Exception("Error al subir")
+                                ref.downloadUrl
+                            }
+                            .addOnSuccessListener { uri ->
+                                userRepository.guardarUsuario(usuarioActualizado.copy(fotoUrl = uri.toString())) { success, _ ->
+                                    if (success) {
+                                        Toast.makeText(contexto, "Cambios guardados con éxito", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                    } else {
+                        userRepository.guardarUsuario(usuarioActualizado) { success, _ ->
+                            if (success) {
+                                Toast.makeText(contexto, "Cambios guardados con éxito", Toast.LENGTH_SHORT).show()
+                            }
                         }
-                        .addOnSuccessListener { uri ->
-                            userRepository.guardarUsuario(usuarioActualizado.copy(fotoUrl = uri.toString())) { _, _ -> }
-                        }
-                } else {
-                    userRepository.guardarUsuario(usuarioActualizado) { _, _ -> }
-                }
-            }) {
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = azulMarino)
+            ) {
                 Text("Guardar cambios")
             }
+
+
 
             if (errorMessage.isNotEmpty()) {
                 Text(errorMessage, color = MaterialTheme.colorScheme.error)

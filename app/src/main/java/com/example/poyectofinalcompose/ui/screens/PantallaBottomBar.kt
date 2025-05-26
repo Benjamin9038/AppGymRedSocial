@@ -69,8 +69,12 @@ fun PantallaBottomBar(navController: NavController) {
                 PantallaGimnasios(bottomNavController)
             }
             composable(BottomBarScreen.Chats.ruta) {
-                PantallaListaChats(bottomNavController)
+                PantallaListaChats(
+                    localNavController = bottomNavController,
+                    globalNavController = navController //
+                )
             }
+
             composable(BottomBarScreen.Configuracion.ruta) {
                 PantallaConfiguracion(navController)
             }
@@ -78,18 +82,10 @@ fun PantallaBottomBar(navController: NavController) {
                 val gymId = backStackEntry.arguments?.getString("gymId") ?: ""
                 PantallaUsuariosPorGimnasio(
                     bottomNavController = bottomNavController,
-                    globalNavController = navController, // <- este es el de NavGraph
+                    globalNavController = navController, //  este es el de NavGraph
                     gymId = gymId
                 )
             }
-
-            composable("chat/{receptorUid}/{receptorNombre}") { backStackEntry ->
-                val receptorUid = backStackEntry.arguments?.getString("receptorUid") ?: ""
-                val receptorNombreEncoded = backStackEntry.arguments?.getString("receptorNombre") ?: ""
-                val receptorNombre = java.net.URLDecoder.decode(receptorNombreEncoded, "UTF-8")
-                PantallaChat(bottomNavController, receptorUid, receptorNombre)
-            }
-
 
 
         }
