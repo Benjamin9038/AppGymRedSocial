@@ -9,7 +9,7 @@ data class Usuario(
     val altura: Double = 0.0,
     val genero: String = "",
     val gymId: String = "",
-    val grupoMuscularFavorito: String = "",
+    val actividadDeporFav: String = "",
     val tiempoEntrenando: String = "",
     val fotoUrl: String? = null // URL de la imagen en Firebase Storage
 

@@ -6,7 +6,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -46,14 +44,14 @@ fun UserScreen(navController: NavController) {
     var edad by remember { mutableStateOf("") }
 
     val listaGimnasios = listOf(
-        "Basic Fit Albacete", "McFit Albacete", "Fitness Villarrobledo",
-        "Tiger Villarrobledo", "FraileGym Villarrobledo", "Centro Albacete", "Otro"
+        "Basic Fit Albacete", "McFit Albacete", "Centro Albacete", "Altafit Albacete",
+        "Fitness Villarrobledo", "Tiger Villarrobledo", "FraileGym Villarrobledo"
     )
     var gimnasioSeleccionado by remember { mutableStateOf(listaGimnasios[0]) }
     var gimnasioExpanded by remember { mutableStateOf(false) }
 
-    val listaGrupos = listOf("Pecho", "Espalda", "Pierna", "Hombro", "Bíceps", "Tríceps", "Abdomen")
-    var grupoMuscular by remember { mutableStateOf(listaGrupos[0]) }
+    val listaGrupos = listOf("Crossfit", "Hipertrofia", "PowerLifting", "Cardio", "Arterofilia")
+    var actividadFav by remember { mutableStateOf(listaGrupos[0]) }
     var grupoExpanded by remember { mutableStateOf(false) }
 
     val tiempos = listOf("Menos de 6 meses", "6-12 meses entrenados", "1-3 años entrenados", "Más de 3 años")
@@ -74,7 +72,7 @@ fun UserScreen(navController: NavController) {
             peso = 0.0,
             altura = 0.0,
             gymId = gimnasioSeleccionado,
-            grupoMuscularFavorito = grupoMuscular,
+            actividadDeporFav = actividadFav,
             tiempoEntrenando = tiempoEntrenando,
             fotoUrl = fotoUrl
         )
@@ -226,12 +224,12 @@ fun UserScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         ExposedDropdownMenuBox(expanded = grupoExpanded, onExpandedChange = { grupoExpanded = !grupoExpanded }) {
             TextField(
-                value = grupoMuscular,
+                value = actividadFav,
                 onValueChange = {},
                 readOnly = true,
                 label = {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("Grupo muscular favorito")
+                        Text("Actividad deportiva favorita")
                     }
                 },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
@@ -247,7 +245,7 @@ fun UserScreen(navController: NavController) {
                     DropdownMenuItem(
                         text = { Text(grupo) },
                         onClick = {
-                            grupoMuscular = grupo
+                            actividadFav = grupo
                             grupoExpanded = false
                         }
                     )

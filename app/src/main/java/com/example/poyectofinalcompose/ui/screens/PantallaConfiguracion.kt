@@ -72,13 +72,13 @@ fun PantallaConfiguracion(navController: NavController) {
         var nombre by remember { mutableStateOf(datos.nombre) }
         var edad by remember { mutableStateOf(datos.edad.toString()) }
         var gym by remember { mutableStateOf(datos.gymId) }
-        var grupo by remember { mutableStateOf(datos.grupoMuscularFavorito) }
+        var grupo by remember { mutableStateOf(datos.actividadDeporFav) }
         var tiempo by remember { mutableStateOf(datos.tiempoEntrenando) }
 
         val listaGimnasios = listOf("Basic Fit Albacete", "McFit Albacete", "Fitness Villarrobledo",
             "Tiger Villarrobledo", "FraileGym Villarrobledo", "Centro Albacete", "Otro")
 
-        val listaGrupos = listOf("Pecho", "Espalda", "Pierna", "Hombro", "Bíceps", "Tríceps", "Abdomen")
+        val listaGrupos = listOf("Crossfit", "Hipertrofia", "PowerLifting", "Cardio", "Arterofilia")
         val tiempos = listOf("menos de 6 meses", "6-12 meses entrenados", "1-3 años entrenados", "más de 3 años")
 
         var gimnasioExpanded by remember { mutableStateOf(false) }
@@ -167,7 +167,7 @@ fun PantallaConfiguracion(navController: NavController) {
                     readOnly = true,
                     label = {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("Grupo muscular favorito")
+                            Text("Actividad deportiva favorita")
                         }
                     },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
@@ -263,7 +263,7 @@ fun PantallaConfiguracion(navController: NavController) {
                         altura = 0.0,
                         genero = "",
                         gymId = gym,
-                        grupoMuscularFavorito = grupo,
+                        actividadDeporFav = grupo,
                         tiempoEntrenando = tiempo,
                         fotoUrl = datos.fotoUrl
                     )

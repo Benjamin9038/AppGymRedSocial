@@ -24,6 +24,11 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.poyectofinalcompose.Data.Model.Mensaje
 import com.example.poyectofinalcompose.Data.Repository.ChatRepository
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.foundation.lazy.rememberLazyListState
+import java.text.SimpleDateFormat
+import java.util.*
+
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,9 +38,12 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
     val chatRepository = remember { ChatRepository() }
     val usuarioActual = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
-
-    var mensajeTexto by remember { mutableStateOf("") }
+     var mensajeTexto by remember { mutableStateOf("") }
     var listaMensajes by remember { mutableStateOf<List<Mensaje>>(emptyList()) }
+
+     //para la posicion de los mensajes mientras escribes
+     val listState = rememberLazyListState()
+     val timestamp: Long = System.currentTimeMillis()
 
      val azulMarino = Color(0xFF005A9C)
      var imagenAmpliada by remember { mutableStateOf(false) }
@@ -47,7 +55,14 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
         }
     }
 
-    Scaffold(
+     LaunchedEffect(listaMensajes) {
+         if (listaMensajes.isNotEmpty()) {
+             listState.animateScrollToItem(listaMensajes.lastIndex)
+         }
+     }
+
+
+     Scaffold(
         topBar = {
             Column {
                 TopAppBar(
@@ -144,14 +159,21 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
     ) { padding ->
         //Comienza el contenido principal del Scaffold y
         // muestra la lista de mensajes en una columna desplazable
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(8.dp)
-        ) {
-            items(listaMensajes) { mensaje ->
-                //Alinea los mensajes a la derecha si son del usuario actual,
+         LazyColumn(
+             state = listState,
+             modifier = Modifier
+                 .fillMaxSize()
+                 .padding(padding)
+                 .padding(8.dp)
+                 .imePadding() // para que se levante con el teclado
+         ) {
+             items(listaMensajes) { mensaje ->
+
+                 val hora = remember(mensaje.timestamp) {
+                     val date = Date(mensaje.timestamp)
+                     SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+                 }
+         //Alinea los mensajes a la derecha si son del usuario actual,
                 //a la izquierda si son del otro
                 val mensajeMio = mensaje.emisorUid == usuarioActual
                 Row(
@@ -166,15 +188,23 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
                         shape = MaterialTheme.shapes.medium,
                         modifier = Modifier
                             .padding(4.dp)
-                            .widthIn(max = 280.dp) // Limita el ancho de la burbuja
-                    )
-                    {
-                        Text(
-                            text = mensaje.contenido,
-                            modifier = Modifier.padding(8.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+                            .widthIn(max = 280.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(
+                                text = mensaje.contenido,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = hora,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                modifier = Modifier.align(Alignment.End)
+                            )
+                        }
                     }
+
                 }
             }
         }

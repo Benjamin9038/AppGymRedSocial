@@ -1,8 +1,6 @@
 package com.example.poyectofinalcompose.ui.screens
 
-
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,10 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -28,8 +24,6 @@ import com.example.poyectofinalcompose.Data.Model.Usuario
 import com.example.poyectofinalcompose.Data.Repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import android.net.Uri
-import androidx.compose.ui.text.style.TextAlign
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,33 +33,21 @@ fun PantallaUsuariosPorGimnasio(
     gymId: String
 ) {
     val userRepository = remember { UserRepository() }
-    val azulMarino = Color(0xFF005A9C)
 
     var usuarios by remember { mutableStateOf<List<Usuario>>(emptyList()) }
     var mostrarCargando by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
-    var imagenAmpliada by remember { mutableStateOf<String?>(null) } // Estado para mostrar imagen ampliada
+    var imagenAmpliada by remember { mutableStateOf<String?>(null) }
 
-    // Se ejecuta una vez cuando cambia el gymId
     LaunchedEffect(gymId) {
-        println("Buscando usuarios con gymId: '$gymId'")
-
-        // Se obtiene la lista de usuarios desde Firestore
         userRepository.obtenerUsuariosPorGimnasio(gymId) { result ->
-            val usuarioActual = FirebaseAuth.getInstance().currentUser?.uid // id del usuario que ha iniciado sesion
-
-            // Se filtra la lista para que no se incluya el propio usuario logueado
+            val usuarioActual = FirebaseAuth.getInstance().currentUser?.uid
             usuarios = result.filter { it.uid != usuarioActual }
-
             mostrarCargando = false
-
-            if (usuarios.isEmpty()) {
-                error = "No hay usuarios registrados en este gimnasio."
-            }
+            if (usuarios.isEmpty()) error = "No hay usuarios registrados en este gimnasio."
         }
     }
 
-    // Mostrar imagen ampliada si se ha seleccionado una
     if (imagenAmpliada != null) {
         AlertDialog(
             onDismissRequest = { imagenAmpliada = null },
@@ -76,14 +58,16 @@ fun PantallaUsuariosPorGimnasio(
                     contentDescription = "Imagen ampliada",
                     modifier = Modifier
                         .size(250.dp)
-                        .clip(RoundedCornerShape(4.dp)) // Bordes suavemente redondeados
-                        .padding(8.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .padding(8.dp),
+                    contentScale = ContentScale.Crop
                 )
             }
         )
     }
 
     Scaffold(
+        containerColor = Color(0xFFF9F9F9),
         topBar = {
             TopAppBar(
                 title = {
@@ -97,86 +81,107 @@ fun PantallaUsuariosPorGimnasio(
                     }
                 }
             )
-
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            // Se muestra según el estado actual
-            when {
-                // Si no hay usuarios se muestra el mensaje
-                error != null -> {
-                    Text(text = error ?: "", color = MaterialTheme.colorScheme.error)
-                }
+        if (usuarios.isEmpty() && !mostrarCargando) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Aún no existe ningún usuario en este gimnasio",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(12.dp)
+            ) {
+                items(usuarios) { usuario ->
+                    val colorFondo = when (usuario.tiempoEntrenando.lowercase()) {
+                        "menos de 6 meses" -> Color(0xFFE0E0E0) // gris
+                        "6-12 meses entrenados" -> Color(0xFFE8F5E9) // verde claro
+                        "1-3 años entrenados" -> Color(0xFFE3F2FD) // azul claro
+                        "más de 3 años" -> Color(0xFFD1C4E9) // morado claro
+                        else -> Color.White
+                    }
 
-                // Si hay usuarios se muestra la lista
-                else -> {
-                    LazyColumn {
-                        items(usuarios) { usuario ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp)
-                                    .border(1.dp, azulMarino, shape = MaterialTheme.shapes.medium)
-                                    .clickable {
-                                        val fotoCodificada = Uri.encode(usuario.fotoUrl ?: "null")
-                                        globalNavController.navigate("chat/${usuario.uid}/${usuario.nombre}/$fotoCodificada")
-                                    }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    if (!usuario.fotoUrl.isNullOrBlank()) {
-                                        Image(
-                                            painter = rememberAsyncImagePainter(usuario.fotoUrl),
-                                            contentDescription = "Foto de ${usuario.nombre}",
-                                            contentScale = ContentScale.Crop, // Ajusta visualmente sin dejar márgenes blancos
-                                            modifier = Modifier
-                                                .padding(start = 2.dp)
-                                                .size(width = 70.dp, height = 100.dp)
-                                                .clip(RoundedCornerShape(16.dp)) // Bordes suavemente redondeados
-                                                .clickable { imagenAmpliada = usuario.fotoUrl }
-                                        )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .clickable {
+                                val fotoCodificada = Uri.encode(usuario.fotoUrl ?: "null")
+                                globalNavController.navigate("chat/${usuario.uid}/${usuario.nombre}/$fotoCodificada")
+                            },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = colorFondo),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (!usuario.fotoUrl.isNullOrBlank()) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(usuario.fotoUrl),
+                                        contentDescription = "Foto de ${usuario.nombre}",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(90.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { imagenAmpliada = usuario.fotoUrl }
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Sin foto",
+                                        modifier = Modifier.size(90.dp)
+                                    )
+                                }
 
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = "Sin foto",
-                                            modifier = Modifier
-                                                .padding(start = 2.dp)
-                                                .size(width = 70.dp, height = 100.dp)
+                                Spacer(modifier = Modifier.width(16.dp))
 
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    Column {
-                                        //De esta manera puedo poner solo en negrita nombre, edad, grupo favorito... sin
-                                        //necesidad de que lo sea también su contenido
-                                        Text(buildAnnotatedString {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Nombre: ") }
-                                            append(usuario.nombre)
-                                        })
-                                        Text(buildAnnotatedString {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Edad: ") }
-                                            append(usuario.edad.toString())
-                                        })
-                                        Text(buildAnnotatedString {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Grupo favorito: ") }
-                                            append(usuario.grupoMuscularFavorito)
-                                        })
-                                        Text(buildAnnotatedString {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Tiempo entrenando: ") }
-                                            append(usuario.tiempoEntrenando)
-                                        })
-                                    }
-
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(usuario.nombre, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    AssistChip(
+                                        onClick = {},
+                                        label = {
+                                            Text(
+                                                "Edad: ${usuario.edad}",
+                                                fontSize = MaterialTheme.typography.bodySmall.fontSize
+                                            )
+                                        },
+                                        modifier = Modifier.height(26.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    AssistChip(
+                                        onClick = {},
+                                        label = {
+                                            Text(
+                                                usuario.actividadDeporFav,
+                                                fontSize = MaterialTheme.typography.bodySmall.fontSize
+                                            )
+                                        },
+                                        modifier = Modifier.height(26.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    AssistChip(
+                                        onClick = {},
+                                        label = {
+                                            Text(
+                                                usuario.tiempoEntrenando,
+                                                fontSize = MaterialTheme.typography.bodySmall.fontSize
+                                            )
+                                        },
+                                        modifier = Modifier.height(26.dp)
+                                    )
                                 }
                             }
                         }
@@ -186,4 +191,3 @@ fun PantallaUsuariosPorGimnasio(
         }
     }
 }
-
