@@ -28,26 +28,29 @@ import android.net.Uri
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaUsuariosPorGimnasio(
-    bottomNavController: NavController,
-    globalNavController: NavController,
-    gymId: String
+    bottomNavController: NavController, // NavController interno
+    globalNavController: NavController, // NavController global
+    gymId: String // ID del gimnasio seleccionado
 ) {
-    val userRepository = remember { UserRepository() }
+    val userRepository = remember { UserRepository() }  // Repositorio para acceder a usuarios de Firestore
 
-    var usuarios by remember { mutableStateOf<List<Usuario>>(emptyList()) }
-    var mostrarCargando by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var imagenAmpliada by remember { mutableStateOf<String?>(null) }
+    // Estados del componente
+    var usuarios by remember { mutableStateOf<List<Usuario>>(emptyList()) } // Lista de usuarios del gimnasio
+    var mostrarCargando by remember { mutableStateOf(true) } // Estado de carga
+    var error by remember { mutableStateOf<String?>(null) } // Mensaje de error (si no hay usuarios)
+    var imagenAmpliada by remember { mutableStateOf<String?>(null) } // Para mostrar imagen ampliada
 
+    // Al entrar en la pantalla, cargamos los usuarios del gimnasio
     LaunchedEffect(gymId) {
         userRepository.obtenerUsuariosPorGimnasio(gymId) { result ->
             val usuarioActual = FirebaseAuth.getInstance().currentUser?.uid
-            usuarios = result.filter { it.uid != usuarioActual }
+            usuarios = result.filter { it.uid != usuarioActual } // Excluir al usuario actual
             mostrarCargando = false
             if (usuarios.isEmpty()) error = "No hay usuarios registrados en este gimnasio."
         }
     }
 
+    // Si hay imagen seleccionada se muestra en grande con un AlertDialog
     if (imagenAmpliada != null) {
         AlertDialog(
             onDismissRequest = { imagenAmpliada = null },
@@ -66,6 +69,7 @@ fun PantallaUsuariosPorGimnasio(
         )
     }
 
+    // Contenedor principal de la pantalla con barra superior
     Scaffold(
         containerColor = Color(0xFFF9F9F9),
         topBar = {
@@ -98,26 +102,30 @@ fun PantallaUsuariosPorGimnasio(
                 )
             }
         } else {
+            // Lista de usuarios
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .padding(12.dp)
             ) {
+                // Color de fondo según experiencia del usuario
                 items(usuarios) { usuario ->
                     val colorFondo = when (usuario.tiempoEntrenando.lowercase()) {
-                        "menos de 6 meses" -> Color(0xFFE0E0E0) // gris
-                        "6-12 meses entrenados" -> Color(0xFFE8F5E9) // verde claro
-                        "1-3 años entrenados" -> Color(0xFFE3F2FD) // azul claro
-                        "más de 3 años" -> Color(0xFFD1C4E9) // morado claro
+                        "menos de 6 meses" -> Color(0xFFEEEEEE) // azul muy claro
+                        "6-12 meses entrenados" -> Color(0xFFE3F2FD) // Azul claro
+                        "1-3 años entrenados" -> Color(0xFFBBDEFB) // Azul medio
+                        "más de 3 años" -> Color(0xFF90CAF9) // Azul oscuro
                         else -> Color.White
                     }
 
+                    //Tarjeta del usuario
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                             .clickable {
+                                // Al pulsar, se navega al chat con ese usuario
                                 val fotoCodificada = Uri.encode(usuario.fotoUrl ?: "null")
                                 globalNavController.navigate("chat/${usuario.uid}/${usuario.nombre}/$fotoCodificada")
                             },

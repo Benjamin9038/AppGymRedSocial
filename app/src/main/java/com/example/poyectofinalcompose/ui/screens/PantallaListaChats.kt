@@ -26,60 +26,78 @@ import com.example.poyectofinalcompose.Data.Model.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import android.net.Uri
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
+import com.example.poyectofinalcompose.Data.Model.Mensaje
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaListaChats(
-    localNavController: NavController,
-    globalNavController: NavController
+    localNavController: NavController, // NavController para moverse dentro del BottomBar
+    globalNavController: NavController // NavController global para navegar a PantallaChat
 )
  {
     val currentUid = FirebaseAuth.getInstance().currentUser?.uid
-    val db = FirebaseFirestore.getInstance()
+    val db = FirebaseFirestore.getInstance() // Referencia a la base de datos de Firestore
 
-    var usuariosConChat by remember { mutableStateOf<List<Usuario>>(emptyList()) }
+    var usuariosConChat by remember { mutableStateOf<List<Usuario>>(emptyList()) } // Usuarios con los que hay chat
     var cargando by remember { mutableStateOf(true) }
     var imagenAmpliada by remember { mutableStateOf<String?>(null) } // Estado para mostrar imagen ampliada
 
-    LaunchedEffect(currentUid) {
-        if (currentUid == null) return@LaunchedEffect
+     val mensajesPorUsuario = remember { mutableStateMapOf<String, Mensaje>() } // Último mensaje por UID
 
-        db.collection("chats")
-            .get()
-            .addOnSuccessListener { chatDocs ->
-                val otrosUids = mutableSetOf<String>()
 
-                for (doc in chatDocs) {
-                    val ids = doc.id.split("_")
-                    if (ids.contains(currentUid) && ids.size == 2) {
-                        val otro = if (ids[0] == currentUid) ids[1] else ids[0]
-                        otrosUids.add(otro)
-                    }
-                }
+     // Efecto que se ejecuta al abrir la pantalla
+     LaunchedEffect(currentUid) {
+         if (currentUid == null) return@LaunchedEffect
 
-                if (otrosUids.isEmpty()) {
-                    usuariosConChat = emptyList()
-                    cargando = false
-                    return@addOnSuccessListener
-                }
+         // Obtener todos los chats
+         db.collection("chats").get().addOnSuccessListener { chatDocs ->
+             val otrosUids = mutableSetOf<String>()
 
-                db.collection("users")
-                    .whereIn("uid", otrosUids.toList())
-                    .get()
-                    .addOnSuccessListener { result ->
-                        usuariosConChat = result.mapNotNull { it.toObject(Usuario::class.java) }
-                        cargando = false
-                    }
-                    .addOnFailureListener {
-                        cargando = false
-                    }
-            }
-            .addOnFailureListener {
-                cargando = false
-            }
-    }
+             for (doc in chatDocs) {
+                 val ids = doc.id.split("_")
+                 if (ids.contains(currentUid) && ids.size == 2) {
+                     val otro = if (ids[0] == currentUid) ids[1] else ids[0]
+                     otrosUids.add(otro)
 
-    // Mostrar imagen ampliada si se ha seleccionado una
+                     //Cargar el ultimo mensaje
+                     db.collection("chats").document(doc.id)
+                         .collection("mensajes")
+                         .orderBy("timestamp", Query.Direction.DESCENDING)
+                         .limit(1)
+                         .get()
+                         .addOnSuccessListener { mensajes ->
+                             mensajes.firstOrNull()?.toObject(Mensaje::class.java)?.let {
+                                 mensajesPorUsuario[otro] = it
+                             }
+                         }
+                 }
+             }
+
+             //si no hay uid no hay chat
+             if (otrosUids.isEmpty()) {
+                 usuariosConChat = emptyList()
+                 cargando = false
+                 return@addOnSuccessListener
+             }
+
+             // Obtener los usuarios a partir de sus UIDs
+             db.collection("users").whereIn("uid", otrosUids.toList()).get()
+                 .addOnSuccessListener { result ->
+                     usuariosConChat = result.mapNotNull { it.toObject(Usuario::class.java) }
+                     cargando = false
+                 }
+         }
+     }
+
+
+     // Mostrar imagen ampliada si se ha seleccionado una
     if (imagenAmpliada != null) {
         AlertDialog(
             onDismissRequest = { imagenAmpliada = null },
@@ -179,10 +197,56 @@ fun PantallaListaChats(
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
-                                Column {
-                                    Text(usuario.nombre, fontWeight = FontWeight.Bold)
-                                    Text("Toca para continuar el chat")
+                                // Mostrar nombre del usuario y último mensaje
+                                val ultimoMensaje = mensajesPorUsuario[usuario.uid]
+                                val horaOFecha = ultimoMensaje?.timestamp?.let { HoraOFechaMensaje(it) } ?: ""
+
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = usuario.nombre,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        if (horaOFecha.isNotBlank()) {
+                                            Text(
+                                                text = horaOFecha,
+                                                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    if (ultimoMensaje != null) {
+                                        Text(
+                                            text = ultimoMensaje.contenido,
+                                            color = Color(0xFF777777),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                            fontWeight = FontWeight.Normal,
+                                            lineHeight = 18.sp
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Toca para continuar el chat",
+                                            color = Color(0xFFAAAAAA),
+                                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    }
                                 }
+
+
+
                             }
                         }
                     }
@@ -191,3 +255,21 @@ fun PantallaListaChats(
         }
     }
 }
+
+// Función que convierte el timestamp del mensaje en hora o fecha
+fun HoraOFechaMensaje(timestamp: Long): String {
+    val ahora = Calendar.getInstance()
+    val fechaMensaje = Calendar.getInstance().apply { timeInMillis = timestamp }
+
+    return if (
+        ahora.get(Calendar.YEAR) == fechaMensaje.get(Calendar.YEAR) &&
+        ahora.get(Calendar.DAY_OF_YEAR) == fechaMensaje.get(Calendar.DAY_OF_YEAR)
+    ) {
+        //si el mensaje es de hoy muestra la hora
+        SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
+    } else {
+        //si no muestra la fecha
+        SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(timestamp))
+    }
+}
+

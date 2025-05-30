@@ -63,6 +63,7 @@ fun NavGraph(navController: NavHostController, isDarkTheme: Boolean, onThemeChan
         }
 
         composable(Screen.Chat.route) { backStackEntry ->
+            // Extraemos el UID, nombre y foto del usuario receptor desde los argumentos de la ruta
             val uid = backStackEntry.arguments?.getString("receptorUid") ?: ""
             val nombre = backStackEntry.arguments?.getString("receptorNombre") ?: ""
             val foto = backStackEntry.arguments?.getString("receptorFotoUrl")?.takeIf { it != "null" }

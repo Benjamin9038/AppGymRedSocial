@@ -1,6 +1,7 @@
 package com.example.poyectofinalcompose.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,11 +50,11 @@ fun LoginScreen(navController: NavController) {
             value = email,
             onValueChange = { email = it },
             label = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text("Correo electrónico")
-                }
+
             },
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = azulMarino,
                 unfocusedBorderColor = azulMarino,
@@ -66,17 +67,16 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         // Campo de contraseña
-
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = {
                 Text(
                     text = "Contraseña",
-                    modifier = Modifier.padding(start = 100.dp)
                 )
             },
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 val icon = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility
@@ -98,7 +98,7 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // BOTÓN INICIAR SESIÓN (con azul marino)
+        // BOTÓN INICIAR SESIÓN
         Button(
             onClick = {
                 // Inicia sesión en Firebase Auth con el correo y la contraseña que se ingresa

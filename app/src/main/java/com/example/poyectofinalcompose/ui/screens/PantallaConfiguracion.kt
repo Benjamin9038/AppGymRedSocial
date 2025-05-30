@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -35,7 +36,7 @@ import com.google.firebase.storage.FirebaseStorage
 fun PantallaConfiguracion(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
     val userRepository = remember { UserRepository() }
-    val uid = auth.currentUser?.uid ?: return
+    val uid = auth.currentUser?.uid ?: return // Si no hay usuario autenticado salimos
     val context = LocalContext.current
     val azulMarino = Color(0xFF005A9C)
 
@@ -44,10 +45,12 @@ fun PantallaConfiguracion(navController: NavController) {
     var errorMessage by remember { mutableStateOf("") }
     var cargando by remember { mutableStateOf(true) }
 
+    // Lanza el selector de imágenes al pulsar Seleccionar imagen
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         imagenUri = uri
     }
 
+    // Carga los datos del usuario actual desde Firestore
     LaunchedEffect(uid) {
         FirebaseFirestore.getInstance().collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
@@ -60,6 +63,7 @@ fun PantallaConfiguracion(navController: NavController) {
             }
     }
 
+    // Mientras carga los datos, muestra un spinner
     if (cargando) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -67,8 +71,8 @@ fun PantallaConfiguracion(navController: NavController) {
         return
     }
 
+    // Si se han cargado los datos del usuario, muestra el formulario editable
     usuario?.let { datos ->
-
         var nombre by remember { mutableStateOf(datos.nombre) }
         var edad by remember { mutableStateOf(datos.edad.toString()) }
         var gym by remember { mutableStateOf(datos.gymId) }
@@ -95,8 +99,10 @@ fun PantallaConfiguracion(navController: NavController) {
             Text("Editar Perfil", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Campo editable nombre
             OutlinedTextField(
                 value = nombre,
+                shape = RoundedCornerShape(24.dp),
                 onValueChange = { nombre = it },
                 label = { Text("Nombre") },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -108,8 +114,10 @@ fun PantallaConfiguracion(navController: NavController) {
                 )
             )
 
+            // Campo editable edad
             OutlinedTextField(
                 value = edad,
+                shape = RoundedCornerShape(24.dp),
                 onValueChange = { edad = it },
                 label = { Text("Edad") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -123,14 +131,16 @@ fun PantallaConfiguracion(navController: NavController) {
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Acerca de tus GymSkills", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Acerca de tus datos en el Gym", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Menú desplegable gimnasio
             ExposedDropdownMenuBox(expanded = gimnasioExpanded, onExpandedChange = {
                 gimnasioExpanded = !gimnasioExpanded
             }) {
                 TextField(
                     value = gym,
+                    shape = RoundedCornerShape(24.dp),
                     onValueChange = {},
                     readOnly = true,
                     label = {
@@ -158,11 +168,13 @@ fun PantallaConfiguracion(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Menú desplegable actividad favorita de deporte
             ExposedDropdownMenuBox(expanded = grupoExpanded, onExpandedChange = {
                 grupoExpanded = !grupoExpanded
             }) {
                 TextField(
                     value = grupo,
+                    shape = RoundedCornerShape(24.dp),
                     onValueChange = {},
                     readOnly = true,
                     label = {
@@ -190,11 +202,13 @@ fun PantallaConfiguracion(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Menú desplegable tiempo entrenando
             ExposedDropdownMenuBox(expanded = tiempoExpanded, onExpandedChange = {
                 tiempoExpanded = !tiempoExpanded
             }) {
                 TextField(
                     value = tiempo,
+                    shape = RoundedCornerShape(24.dp),
                     onValueChange = {},
                     readOnly = true,
                     label = {
@@ -224,6 +238,7 @@ fun PantallaConfiguracion(navController: NavController) {
 
             Text("Foto de perfil (opcional)", fontWeight = FontWeight.Bold)
 
+            // Muestra la imagen seleccionada o la actual del usuario
             if (imagenUri != null) {
                 Image(
                     painter = rememberAsyncImagePainter(imagenUri),
@@ -252,8 +267,10 @@ fun PantallaConfiguracion(navController: NavController) {
 
             val contexto = LocalContext.current
 
+            // Botón para guardar cambios
             Button(
                 onClick = {
+                    // Crear objeto actualizado del usuario
                     val usuarioActualizado = Usuario(
                         uid = uid,
                         email = datos.email,
@@ -268,6 +285,7 @@ fun PantallaConfiguracion(navController: NavController) {
                         fotoUrl = datos.fotoUrl
                     )
 
+                    // Si se ha seleccionado nueva imagen la subimos y actualizamos
                     if (imagenUri != null) {
                         val ref = FirebaseStorage.getInstance().reference.child("fotos_perfil/$uid.jpg")
                         ref.putFile(imagenUri!!)
@@ -283,6 +301,7 @@ fun PantallaConfiguracion(navController: NavController) {
                                 }
                             }
                     } else {
+                        // si no actualizamos lo demas y ya está
                         userRepository.guardarUsuario(usuarioActualizado) { success, _ ->
                             if (success) {
                                 Toast.makeText(contexto, "Cambios guardados con éxito", Toast.LENGTH_SHORT).show()

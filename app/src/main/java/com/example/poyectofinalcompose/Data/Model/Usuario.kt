@@ -11,6 +11,6 @@ data class Usuario(
     val gymId: String = "",
     val actividadDeporFav: String = "",
     val tiempoEntrenando: String = "",
-    val fotoUrl: String? = null // URL de la imagen en Firebase Storage
+    val fotoUrl: String? = null, // URL de la imagen en Firebase Storage
 
 )

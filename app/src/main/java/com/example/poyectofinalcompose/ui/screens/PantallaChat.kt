@@ -35,14 +35,17 @@ import java.util.*
 @Composable
 fun PantallaChat(navController: NavController, receptorUid: String, receptorNombre: String, receptorFotoUrl: String?)
  {
+     // Repositorio para interactuar con Firestore (mensajes)
     val chatRepository = remember { ChatRepository() }
     val usuarioActual = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
+     // Texto actual del mensaje que está escribiendo el usuario
      var mensajeTexto by remember { mutableStateOf("") }
     var listaMensajes by remember { mutableStateOf<List<Mensaje>>(emptyList()) }
 
      //para la posicion de los mensajes mientras escribes
      val listState = rememberLazyListState()
+     // Estado del scroll de la lista de mensajes
      val timestamp: Long = System.currentTimeMillis()
 
      val azulMarino = Color(0xFF005A9C)
@@ -55,13 +58,14 @@ fun PantallaChat(navController: NavController, receptorUid: String, receptorNomb
         }
     }
 
+     // Cuando se actualiza la lista de mensajes, baja automáticamente al último mensaje
      LaunchedEffect(listaMensajes) {
          if (listaMensajes.isNotEmpty()) {
              listState.animateScrollToItem(listaMensajes.lastIndex)
          }
      }
 
-
+     // Estructura principal con TopBar, LazyColumn y barra inferior input
      Scaffold(
         topBar = {
             Column {

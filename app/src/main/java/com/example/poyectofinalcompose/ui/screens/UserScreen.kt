@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -34,8 +35,8 @@ import com.google.firebase.storage.FirebaseStorage
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(navController: NavController) {
-    val auth = FirebaseAuth.getInstance()
-    val userRepository = remember { UserRepository() }
+    val auth = FirebaseAuth.getInstance() //Autenticación de Firebase
+    val userRepository = remember { UserRepository() } //Repositorio para guardar usuarios
     val azulMarino = Color(0xFF005A9C)
 
     var email by remember { mutableStateOf("") }
@@ -107,10 +108,9 @@ fun UserScreen(navController: NavController) {
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
+            shape = RoundedCornerShape(24.dp),
             label = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text("Correo electrónico")
-                }
             },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -124,10 +124,10 @@ fun UserScreen(navController: NavController) {
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
+            shape = RoundedCornerShape(24.dp),
             label = {
                 Text(
                     text = "Contraseña",
-                    modifier = Modifier.padding(start = 102.dp)
                 )
             }
             ,
@@ -152,11 +152,11 @@ fun UserScreen(navController: NavController) {
 
         OutlinedTextField(
             value = nombre,
+            shape = RoundedCornerShape(24.dp),
             onValueChange = { nombre = it },
             label = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text("Nombre")
-                }
+
             },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -169,11 +169,10 @@ fun UserScreen(navController: NavController) {
 
         OutlinedTextField(
             value = edad,
+            shape = RoundedCornerShape(24.dp),
             onValueChange = { edad = it },
             label = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text("Edad")
-                }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -187,18 +186,17 @@ fun UserScreen(navController: NavController) {
 
         // Dropdown de gimnasio
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Acerca de tus GymSkills", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Acerca de tus datos en el Gym", fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
         Spacer(modifier = Modifier.height(16.dp))
         ExposedDropdownMenuBox(expanded = gimnasioExpanded, onExpandedChange = { gimnasioExpanded = !gimnasioExpanded }) {
             TextField(
                 value = gimnasioSeleccionado,
+                shape = RoundedCornerShape(24.dp),
                 onValueChange = {},
                 readOnly = true,
                 label = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text("Selecciona el Gimnasio en el que entrenas")
-                    }
                 },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
@@ -225,12 +223,11 @@ fun UserScreen(navController: NavController) {
         ExposedDropdownMenuBox(expanded = grupoExpanded, onExpandedChange = { grupoExpanded = !grupoExpanded }) {
             TextField(
                 value = actividadFav,
+                shape = RoundedCornerShape(24.dp),
                 onValueChange = {},
                 readOnly = true,
                 label = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text("Actividad deportiva favorita")
-                    }
                 },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
@@ -257,12 +254,11 @@ fun UserScreen(navController: NavController) {
         ExposedDropdownMenuBox(expanded = tiempoExpanded, onExpandedChange = { tiempoExpanded = !tiempoExpanded }) {
             TextField(
                 value = tiempoEntrenando,
+                shape = RoundedCornerShape(24.dp),
                 onValueChange = {},
                 readOnly = true,
                 label = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text("Tiempo entrenado")
-                    }
                 },
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
@@ -288,6 +284,7 @@ fun UserScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
         Text("Foto de perfil (opcional)", fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
+        // Imagen seleccionada (si existe)
         imagenUri?.let {
             Image(
                 painter = rememberAsyncImagePainter(it),
@@ -296,6 +293,7 @@ fun UserScreen(navController: NavController) {
             )
         }
 
+        // Boton para seleccionar imagen de galería
         Button(
             onClick = { launcher.launch("image/*") },
             colors = ButtonDefaults.buttonColors(containerColor = azulMarino)
@@ -305,13 +303,16 @@ fun UserScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Botón para crear la cuenta en Firebase
         Button(
             onClick = {
                 if (email.isNotBlank() && password.length >= 6) {
+                    // Crear cuenta con Auth
                     auth.createUserWithEmailAndPassword(email.trim(), password.trim())
                         .addOnSuccessListener { result ->
                             val uid = result.user?.uid ?: return@addOnSuccessListener
                             if (imagenUri != null) {
+                                // Subir imagen a Storage
                                 val storageRef = FirebaseStorage.getInstance().reference.child("fotos_perfil/$uid.jpg")
                                 storageRef.putFile(imagenUri!!)
                                     .continueWithTask { task ->

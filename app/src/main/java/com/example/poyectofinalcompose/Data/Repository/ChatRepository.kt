@@ -5,7 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 
-
+// Repositorio que gestiona el envío y la recepción de mensajes entre usuarios usando Firestore
 class ChatRepository {
     private val db = FirebaseFirestore.getInstance()
 

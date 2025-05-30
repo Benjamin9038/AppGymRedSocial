@@ -17,13 +17,15 @@ import com.example.poyectofinalcompose.Navigation.BottomBarScreen
 
 @Composable
 fun PantallaBottomBar(navController: NavController) {
+
+    // Controlador de navegación específico para las pantallas de la barra inferior
     val bottomNavController = rememberNavController()
     val screens = listOf(
         BottomBarScreen.Inicio,
         BottomBarScreen.Chats,
         BottomBarScreen.Configuracion
     )
-
+    // Obtenemos la ruta actual para saber qué icono está activo en la barra inferior
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -37,19 +39,20 @@ fun PantallaBottomBar(navController: NavController) {
                         label = { Text(screen.titulo) },
                         selected = currentRoute == screen.ruta,
                         onClick = {
+                            // Si se pulsa el botón de inicio, se fuerza la navegación a esa ruta
                             if (screen.ruta == BottomBarScreen.Inicio.ruta) {
-                                // Vuelve al inicio (PantallaGimnasios) forzadamente
                                 bottomNavController.popBackStack(BottomBarScreen.Inicio.ruta, inclusive = false)
                                 bottomNavController.navigate(BottomBarScreen.Inicio.ruta) {
-                                    launchSingleTop = true
+                                    launchSingleTop = true  // Evita duplicar la pantalla en el back stack(pila de pantallas o rutas)
                                 }
                             } else {
+                                // Para otras rutas se navega guardando estado
                                 bottomNavController.navigate(screen.ruta) {
                                     popUpTo(bottomNavController.graph.findStartDestination().id) {
-                                        saveState = true
+                                        saveState = true // Guarda el estado anterior (scroll)
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                    launchSingleTop = true // No apila múltiples copias
+                                    restoreState = true // Restaura el estado anterior si vuelve
                                 }
                             }
                         }
