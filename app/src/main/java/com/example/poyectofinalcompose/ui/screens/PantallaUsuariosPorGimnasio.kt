@@ -112,7 +112,7 @@ fun PantallaUsuariosPorGimnasio(
                 // Color de fondo según experiencia del usuario
                 items(usuarios) { usuario ->
                     val colorFondo = when (usuario.tiempoEntrenando.lowercase()) {
-                        "menos de 6 meses" -> Color(0xFFEEEEEE) // azul muy claro
+                        "menos de 6 meses" -> Color(0xFFEEEEEE) // gris
                         "6-12 meses entrenados" -> Color(0xFFE3F2FD) // Azul claro
                         "1-3 años entrenados" -> Color(0xFFBBDEFB) // Azul medio
                         "más de 3 años" -> Color(0xFF90CAF9) // Azul oscuro

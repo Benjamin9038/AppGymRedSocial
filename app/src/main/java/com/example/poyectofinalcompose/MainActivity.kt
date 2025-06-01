@@ -20,7 +20,7 @@
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
 
-            // 🔍 Comprobar la orientación en onCreate
+            // Comprobar la orientación en onCreate
             checkOrientation()
 
             setContent {
